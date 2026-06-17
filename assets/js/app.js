@@ -169,6 +169,7 @@ const floatingWidget = document.getElementById("floatingWidget");
 const floatingOrb = document.getElementById("floatingOrb");
 const floatingDigitBoard = document.getElementById("floatingDigitBoard");
 const floatingTempReadout = document.getElementById("floatingTempReadout");
+const overviewHeatTooltip = document.getElementById("overviewHeatTooltip");
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -335,6 +336,102 @@ function getAllDisks() {
       hostName: host.name
     }))
   );
+}
+
+function getHostHealthSummary(host) {
+  if (host.status === "离线") {
+    return "主机当前离线，采集数据已停更，需要优先检查网络连通性与采集代理状态。";
+  }
+  if (host.status === "异常") {
+    return `主机资源波动明显，当前 CPU ${host.cpu}% / 内存 ${host.memory}% / 磁盘 ${host.disk}% ，需要尽快处理高负载项。`;
+  }
+  if (host.daysLeft <= 7) {
+    return `磁盘余量进入紧张区，按照当前增长趋势预计 ${host.daysLeft} 天后触达容量阈值。`;
+  }
+  if (host.disk >= thresholdConfig.diskThreshold) {
+    return `磁盘使用率已达 ${host.disk}% ，短期内存在容量告警风险，建议尽快安排清理。`;
+  }
+  if (host.memory >= thresholdConfig.memoryThreshold) {
+    return `内存占比持续偏高，当前已达 ${host.memory}% ，建议核查高占用进程与缓存使用情况。`;
+  }
+  if (host.cpu >= thresholdConfig.cpuThreshold) {
+    return `CPU 占比接近阈值，当前已达 ${host.cpu}% ，建议关注批处理任务与异常进程。`;
+  }
+  return "主机当前整体运行平稳，核心指标处于可控区间，建议保持持续观察。";
+}
+
+function getHostRecommendedAction(host) {
+  if (host.status === "离线") {
+    return "检查主机网络、心跳服务与采集代理进程，恢复在线后补采最近监测数据。";
+  }
+  if (host.status === "异常") {
+    return "优先打开主机详情定位高占用进程，并结合告警中心确认是否需要限流或重启相关服务。";
+  }
+  if (host.daysLeft <= 7 || host.disk >= thresholdConfig.diskThreshold) {
+    return "安排磁盘清理或日志归档任务，必要时扩容对应分区，避免业务日志写满。";
+  }
+  if (host.memory >= thresholdConfig.memoryThreshold) {
+    return "检查内存热点进程与缓存策略，必要时在维护窗口执行进程重启或策略调优。";
+  }
+  if (host.cpu >= thresholdConfig.cpuThreshold) {
+    return "排查定时任务和高占用进程，必要时调整批任务执行时段或增加资源配额。";
+  }
+  return "维持当前监控策略，并继续观察趋势变化；若指标持续抬升，可提前创建巡检任务。";
+}
+
+function positionOverviewHeatTooltip(clientX, clientY) {
+  if (!overviewHeatTooltip) return;
+  const wrap = overviewHeatTooltip.parentElement;
+  if (!wrap) return;
+  const wrapRect = wrap.getBoundingClientRect();
+  const tooltipRect = overviewHeatTooltip.getBoundingClientRect();
+  const localX = clientX - wrapRect.left;
+  const localY = clientY - wrapRect.top;
+  const maxLeft = Math.max(12, wrapRect.width - tooltipRect.width - 12);
+  const belowTop = localY + 18;
+  const aboveTop = localY - tooltipRect.height - 18;
+  const preferredTop = belowTop <= wrapRect.height - tooltipRect.height - 12 ? belowTop : aboveTop;
+
+  overviewHeatTooltip.style.left = `${clamp(localX + 18, 12, maxLeft)}px`;
+  overviewHeatTooltip.style.top = `${clamp(preferredTop, 12, Math.max(12, wrapRect.height - tooltipRect.height - 12))}px`;
+}
+
+function hideOverviewHeatTooltip() {
+  if (!overviewHeatTooltip) return;
+  overviewHeatTooltip.classList.remove("show");
+  overviewHeatTooltip.setAttribute("aria-hidden", "true");
+  document.querySelectorAll("#overviewHeatmap polygon.is-active").forEach((cell) => cell.classList.remove("is-active"));
+}
+
+function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
+  if (!overviewHeatTooltip) return;
+
+  overviewHeatTooltip.innerHTML = `
+    <div class="overview-heat-tooltip-head">
+      <h4 class="overview-heat-tooltip-title">${host.name}</h4>
+      ${formatStatusBadge(host.status)}
+    </div>
+    <div class="overview-heat-tooltip-summary">
+      <span class="overview-heat-tooltip-label">摘要</span>
+      <p>${getHostHealthSummary(host)}</p>
+    </div>
+    <div class="overview-heat-tooltip-metrics">
+      <div class="overview-heat-tooltip-metric"><span>CPU 占比</span><strong>${host.cpu}%</strong></div>
+      <div class="overview-heat-tooltip-metric"><span>内存占比</span><strong>${host.memory}%</strong></div>
+      <div class="overview-heat-tooltip-metric"><span>磁盘占比</span><strong>${host.disk}%</strong></div>
+      <div class="overview-heat-tooltip-metric"><span>剩余使用天数</span><strong>${host.daysLeft} 天</strong></div>
+    </div>
+    <div class="overview-heat-tooltip-action">
+      <span class="overview-heat-tooltip-label">建议动作</span>
+      <p>${getHostRecommendedAction(host)}</p>
+    </div>
+  `;
+
+  document.querySelectorAll("#overviewHeatmap polygon.is-active").forEach((cell) => cell.classList.remove("is-active"));
+  polygon.classList.add("is-active");
+  overviewHeatTooltip.classList.add("show");
+  overviewHeatTooltip.setAttribute("aria-hidden", "false");
+  positionOverviewHeatTooltip(clientX, clientY);
 }
 
 function createWave(base, amplitude, points, offset, min, max) {
@@ -547,11 +644,30 @@ function renderOverviewHeatmap(targetId, stats) {
       const y = startY + row * stepY;
       const nx = column / (columns - 1);
       const ny = row / (rows - 1);
-      cells += `<polygon points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
+      const host = hosts[(row * columns + column) % hosts.length];
+      cells += `<polygon data-host-id="${host.id}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
     }
   }
 
   svg.innerHTML = cells;
+  svg.querySelectorAll("polygon").forEach((polygon) => {
+    const hostId = polygon.dataset.hostId;
+    polygon.addEventListener("pointerenter", (event) => {
+      const host = getHostById(hostId);
+      if (!host) return;
+      showOverviewHeatTooltip(host, polygon, event.clientX, event.clientY);
+    });
+    polygon.addEventListener("pointermove", (event) => {
+      const host = getHostById(hostId);
+      if (!host) return;
+      showOverviewHeatTooltip(host, polygon, event.clientX, event.clientY);
+    });
+    polygon.addEventListener("pointerleave", () => {
+      polygon.classList.remove("is-active");
+      hideOverviewHeatTooltip();
+    });
+  });
+  svg.addEventListener("pointerleave", hideOverviewHeatTooltip);
 }
 
 function renderPagination(targetId, totalPages, activePage, onChange) {
