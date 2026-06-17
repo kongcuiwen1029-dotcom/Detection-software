@@ -170,6 +170,7 @@ const floatingWidget = document.getElementById("floatingWidget");
 const floatingOrb = document.getElementById("floatingOrb");
 const floatingDigitBoard = document.getElementById("floatingDigitBoard");
 const floatingTempReadout = document.getElementById("floatingTempReadout");
+const overviewHeatHosts = document.getElementById("overviewHeatHosts");
 const overviewHeatTooltip = document.getElementById("overviewHeatTooltip");
 const overviewHeatAxis = document.getElementById("overviewHeatAxis");
 const overviewHeatRangeButtons = Array.from(document.querySelectorAll("[data-heat-range]"));
@@ -341,6 +342,35 @@ function getAllDisks() {
   );
 }
 
+function getOverviewHeatHosts() {
+  const total = 24;
+
+  return Array.from({ length: total }, (_, index) => {
+    const template = hosts[index % hosts.length];
+    const rowNumber = index + 1;
+    const zone = Math.floor(index / 8) + 1;
+    const cpu = clamp(template.cpu + ((index % 6) - 2) * 3 + (index % 5 === 0 ? 4 : 0), 18, 97);
+    const memory = clamp(template.memory + ((index % 5) - 2) * 2 + (index % 4 === 1 ? 3 : 0), 24, 96);
+    const disk = clamp(template.disk + ((index % 4) - 1) * 4 + (index % 7 === 0 ? 3 : 0), 30, 96);
+    const daysLeft = clamp(Math.round((100 - disk) * 0.95) - (index % 3), 2, 99);
+    const temp = clamp(Math.round(45 + cpu * 0.28 + (index % 4)), 42, 88);
+
+    return {
+      id: `overview-host-${String(rowNumber).padStart(2, "0")}`,
+      sourceHostId: template.id,
+      name: `${template.name.replace(/-\d+$/, "")}-${String(rowNumber).padStart(2, "0")}`,
+      ip: `10.2.${zone}.${15 + index}`,
+      os: template.os,
+      status: template.status,
+      cpu,
+      memory,
+      disk,
+      daysLeft,
+      temp
+    };
+  });
+}
+
 function getHeatCellDisplayStatus(fillColor) {
   const normalized = String(fillColor || "").toLowerCase();
   const abnormalColors = new Set(["#ffd028", "#ff2f4d", "#ff4564", "#b63863", "#742f5f"]);
@@ -389,20 +419,24 @@ function getHeatCellTimeText(column, columns) {
   return `${String(hour).padStart(2, "0")}:${minutes}`;
 }
 
-function getOverviewHeatColumnCount(mode) {
+function getOverviewHeatColumnCount(mode, availableWidth, availableHeight, rowCount) {
+  const width = Math.max(520, Math.round(availableWidth || 760));
+  const height = Math.max(220, Math.round(availableHeight || 520));
+  const rows = Math.max(1, rowCount || 24);
+  const fillColumns = Math.round((width / height) * ((2 + (rows - 1) * 1.5) / Math.sqrt(3)) - 0.5);
+
   if (mode === "week") {
-    return 14;
+    return clamp(fillColumns, 16, 24);
   }
 
   if (mode === "month") {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return clamp(fillColumns + 2, 20, 30);
   }
 
-  return 48;
+  return clamp(fillColumns, 24, 32);
 }
 
-function getOverviewHeatAxisLabels(mode) {
+function getOverviewHeatAxisLabels(mode, columns) {
   if (mode === "week") {
     return ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
   }
@@ -410,28 +444,34 @@ function getOverviewHeatAxisLabels(mode) {
   if (mode === "month") {
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const labelCount = Math.min(8, daysInMonth);
+    const labelCount = Math.min(6, Math.max(columns, 1));
     return Array.from({ length: labelCount }, (_, index) => {
       const day = Math.round((index / Math.max(labelCount - 1, 1)) * (daysInMonth - 1)) + 1;
       return `${day}日`;
     });
   }
 
-  return ["00:00", "03:30", "07:00", "10:00", "13:30", "17:00", "20:00", "23:30"];
+  const labelCount = clamp(Math.round(columns / 2), 5, 7);
+  return Array.from({ length: labelCount }, (_, index) => {
+    const columnIndex = Math.round((index / Math.max(labelCount - 1, 1)) * Math.max(columns - 1, 0));
+    return getHeatCellTimeText(columnIndex, columns);
+  });
 }
 
 function getOverviewHeatCellLabel(column, columns, mode) {
   if (mode === "week") {
-    const labels = getOverviewHeatAxisLabels("week");
-    const normalized = clamp(column, 0, Math.max(columns - 1, 0)) / Math.max(columns, 1);
-    const index = clamp(Math.floor(normalized * labels.length), 0, labels.length - 1);
+    const labels = getOverviewHeatAxisLabels("week", columns);
+    const normalized = clamp(column, 0, Math.max(columns - 1, 0)) / Math.max(columns - 1, 1);
+    const index = clamp(Math.round(normalized * (labels.length - 1)), 0, labels.length - 1);
     return labels[index];
   }
 
   if (mode === "month") {
     const now = new Date();
     const month = now.getMonth() + 1;
-    const day = clamp(Math.floor(clamp(column, 0, Math.max(columns - 1, 0))) + 1, 1, columns);
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const normalized = clamp(column, 0, Math.max(columns - 1, 0)) / Math.max(columns - 1, 1);
+    const day = clamp(Math.round(normalized * (daysInMonth - 1)) + 1, 1, daysInMonth);
     return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
   }
 
@@ -440,9 +480,52 @@ function getOverviewHeatCellLabel(column, columns, mode) {
 
 function renderOverviewHeatAxis(columns) {
   if (!overviewHeatAxis) return;
-  const labels = getOverviewHeatAxisLabels(overviewHeatRangeState.value);
+  const labels = getOverviewHeatAxisLabels(overviewHeatRangeState.value, columns);
   overviewHeatAxis.style.setProperty("--heat-axis-count", String(labels.length));
   overviewHeatAxis.innerHTML = labels.map((label) => `<span>${label}</span>`).join("");
+}
+
+function renderOverviewHeatHosts(hostList, rowCenters, chartHeight) {
+  if (!overviewHeatHosts) return;
+
+  overviewHeatHosts.style.height = `${chartHeight}px`;
+  overviewHeatHosts.innerHTML = hostList
+    .map(
+      (host, index) =>
+        `<div class="overview-heat-host-item" data-host-id="${host.id}" data-row-index="${index}" style="top:${rowCenters[index]}px">${host.ip}</div>`
+    )
+    .join("");
+}
+
+function clearOverviewHeatActiveState() {
+  document.querySelectorAll("#overviewHeatmap polygon.is-row-active, #overviewHeatmap polygon.is-active").forEach((cell) => {
+    cell.classList.remove("is-row-active", "is-active");
+  });
+  document.querySelectorAll("#overviewHeatmap .overview-heat-row-band.is-active").forEach((band) => {
+    band.classList.remove("is-active");
+  });
+  if (overviewHeatHosts) {
+    overviewHeatHosts.querySelectorAll(".overview-heat-host-item.is-active").forEach((item) => {
+      item.classList.remove("is-active");
+    });
+  }
+}
+
+function highlightOverviewHeatRow(rowIndex, polygon) {
+  clearOverviewHeatActiveState();
+
+  document.querySelectorAll(`#overviewHeatmap polygon[data-row-index="${rowIndex}"]`).forEach((cell) => {
+    cell.classList.add("is-row-active");
+  });
+  document.querySelectorAll(`#overviewHeatmap .overview-heat-row-band[data-row-index="${rowIndex}"]`).forEach((band) => {
+    band.classList.add("is-active");
+  });
+  if (overviewHeatHosts) {
+    overviewHeatHosts.querySelectorAll(`.overview-heat-host-item[data-row-index="${rowIndex}"]`).forEach((item) => {
+      item.classList.add("is-active");
+    });
+  }
+  polygon.classList.add("is-active");
 }
 
 function positionOverviewHeatTooltip(clientX, clientY) {
@@ -466,7 +549,7 @@ function hideOverviewHeatTooltip() {
   if (!overviewHeatTooltip) return;
   overviewHeatTooltip.classList.remove("show");
   overviewHeatTooltip.setAttribute("aria-hidden", "true");
-  document.querySelectorAll("#overviewHeatmap polygon.is-active").forEach((cell) => cell.classList.remove("is-active"));
+  clearOverviewHeatActiveState();
 }
 
 function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
@@ -499,8 +582,7 @@ function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
     </div>
   `;
 
-  document.querySelectorAll("#overviewHeatmap polygon.is-active").forEach((cell) => cell.classList.remove("is-active"));
-  polygon.classList.add("is-active");
+  highlightOverviewHeatRow(polygon.dataset.rowIndex, polygon);
   overviewHeatTooltip.classList.add("show");
   overviewHeatTooltip.setAttribute("aria-hidden", "false");
   positionOverviewHeatTooltip(clientX, clientY);
@@ -696,51 +778,60 @@ function renderOverviewHeatmap(targetId, stats) {
   if (!svg) return;
   hideOverviewHeatTooltip();
 
+  const heatHosts = getOverviewHeatHosts();
   const rect = svg.getBoundingClientRect();
   const width = Math.max(320, Math.round(rect.width || 1000));
   const height = Math.max(220, Math.round(rect.height || 620));
-  const paddingX = 18;
+  const paddingX = 0;
   const paddingY = 14;
   const usableWidth = Math.max(160, width - paddingX * 2);
   const usableHeight = Math.max(120, height - paddingY * 2);
   const mode = overviewHeatRangeState.value;
-  const columns = getOverviewHeatColumnCount(mode);
+  const rows = heatHosts.length;
+  const columns = getOverviewHeatColumnCount(mode, usableWidth, usableHeight, rows);
   const widthRadius = usableWidth / ((columns + 0.5) * Math.sqrt(3));
-  const radius = clamp(Math.min(widthRadius, usableHeight / 34), 6.4, 18);
+  const heightRadius = usableHeight / (2 + (rows - 1) * 1.5);
+  const radius = clamp(Math.min(widthRadius, heightRadius), 5.4, 18);
   const hexWidth = Math.sqrt(3) * radius;
   const stepX = hexWidth;
   const stepY = radius * 1.5;
-  const rows = Math.max(10, Math.floor((usableHeight - radius * 2) / stepY) + 1);
   const gridWidth = (columns + 0.5) * hexWidth;
   const gridHeight = radius * 2 + (rows - 1) * stepY;
-  const startX = (width - gridWidth) / 2 + hexWidth / 2;
-  const startY = (height - gridHeight) / 2 + radius;
+  const startX = paddingX + hexWidth / 2;
+  const startY = paddingY + Math.max((usableHeight - gridHeight) / 2, 0) + radius;
 
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   renderOverviewHeatAxis(columns);
+  const rowCenters = [];
+  let rowBands = "";
 
   let cells = "";
   for (let row = 0; row < rows; row += 1) {
-    const host = hosts[row % hosts.length];
+    const host = heatHosts[row];
+    const rowY = startY + row * stepY;
+    rowCenters.push(rowY);
+    rowBands += `<rect class="overview-heat-row-band" data-row-index="${row}" x="0" y="${(rowY - Math.max(radius * 0.98, stepY * 0.58)).toFixed(2)}" width="${width}" height="${Math.max(radius * 1.96, stepY * 1.16).toFixed(2)}" rx="${Math.max(radius * 0.82, 8).toFixed(2)}"></rect>`;
     for (let column = 0; column < columns; column += 1) {
       const x = startX + column * stepX + (row % 2 ? stepX / 2 : 0);
-      const y = startY + row * stepY;
+      const y = rowY;
       const nx = column / (columns - 1);
       const ny = row / (rows - 1);
       const timeLabel = getOverviewHeatCellLabel(column, columns, overviewHeatRangeState.value);
-      cells += `<polygon data-host-id="${host.id}" data-time-label="${timeLabel}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
+      cells += `<polygon data-host-id="${host.id}" data-row-index="${row}" data-time-label="${timeLabel}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
     }
   }
 
-  svg.innerHTML = cells;
+  renderOverviewHeatHosts(heatHosts, rowCenters, height);
+  svg.innerHTML = `<g class="overview-heat-row-bands">${rowBands}</g><g class="overview-heat-cells">${cells}</g>`;
+  const heatHostMap = new Map(heatHosts.map((host) => [host.id, host]));
   svg.onpointermove = (event) => {
     const polygon = event.target instanceof SVGPolygonElement ? event.target : null;
     if (!polygon) {
       hideOverviewHeatTooltip();
       return;
     }
-    const host = getHostById(polygon.dataset.hostId);
+    const host = heatHostMap.get(polygon.dataset.hostId);
     if (!host) {
       hideOverviewHeatTooltip();
       return;

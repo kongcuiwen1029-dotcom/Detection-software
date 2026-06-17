@@ -2262,10 +2262,16 @@
 
       .overview-heat-head {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .overview-heat-copy {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
       }
 
       .overview-heat-head h3 {
@@ -2273,6 +2279,13 @@
         color: #ffffff;
         font-size: 24px;
         line-height: 1.2;
+      }
+
+      .overview-heat-copy p {
+        margin: 0;
+        color: #7f8ab3;
+        font-size: 13px;
+        line-height: 1.5;
       }
 
       .overview-heat-range {
@@ -2315,18 +2328,74 @@
 
       .overview-heat-wrap {
         position: relative;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr);
+        align-items: stretch;
+        gap: 16px;
         min-height: 0;
         height: 100%;
-        padding: 4px 0 28px;
+        padding: 6px 0 28px;
+      }
+
+      .overview-heat-hosts {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .overview-heat-host-item {
+        position: absolute;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 10px;
+        color: #727fae;
+        background: transparent;
+        border-left: 2px solid transparent;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        transform: translateY(-50%);
+        transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .overview-heat-host-item.is-active {
+        color: #f7fbff;
+        background: rgba(31, 55, 160, 0.22);
+        border-left-color: rgba(122, 215, 255, 0.92);
+        box-shadow: 0 0 18px rgba(25, 108, 255, 0.16);
+      }
+
+      .overview-heat-canvas {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
       }
 
       .overview-heatmap {
         display: block;
         width: 100%;
-        flex: 1 1 auto;
+        height: 100%;
         min-height: 0;
+      }
+
+      .overview-heatmap .overview-heat-row-band {
+        fill: rgba(47, 79, 203, 0);
+        opacity: 0;
+        pointer-events: none;
+        transition: fill 160ms ease, opacity 160ms ease, filter 160ms ease;
+      }
+
+      .overview-heatmap .overview-heat-row-band.is-active {
+        fill: rgba(54, 100, 255, 0.08);
+        opacity: 1;
+        filter: drop-shadow(0 0 12px rgba(72, 196, 255, 0.16));
       }
 
       .overview-heatmap polygon {
@@ -2338,7 +2407,12 @@
         transform-origin: center;
       }
 
-      .overview-heatmap polygon:hover,
+      .overview-heatmap polygon.is-row-active {
+        stroke: rgba(90, 116, 214, 0.58);
+        stroke-width: 1.24;
+        filter: brightness(1.04);
+      }
+
       .overview-heatmap polygon.is-active {
         stroke: rgba(222, 231, 255, 0.92);
         stroke-width: 1.6;
@@ -2460,9 +2534,9 @@
       .overview-heat-axis {
         --heat-axis-count: 8;
         position: absolute;
-        right: 18px;
+        right: 0;
         bottom: 0;
-        left: 18px;
+        left: 0;
         display: grid;
         grid-template-columns: repeat(var(--heat-axis-count), minmax(0, 1fr));
         gap: 12px;
@@ -2558,8 +2632,17 @@
           padding: 18px 18px 16px;
         }
 
+        .overview-heat-wrap {
+          grid-template-columns: 100px minmax(0, 1fr);
+          gap: 12px;
+        }
+
         .overview-heat-head h3 {
           font-size: 20px;
+        }
+
+        .overview-heat-copy p {
+          font-size: 12px;
         }
 
         .overview-heat-range-button {
@@ -2595,6 +2678,20 @@
           font-size: 15px;
         }
 
+        .overview-heat-head {
+          flex-direction: column;
+        }
+
+        .overview-heat-wrap {
+          grid-template-columns: 82px minmax(0, 1fr);
+          gap: 10px;
+        }
+
+        .overview-heat-host-item {
+          padding: 0 6px;
+          font-size: 11px;
+        }
+
         .overview-mini-value {
           font-size: 34px;
         }
@@ -2604,8 +2701,6 @@
         }
 
         .overview-heat-axis {
-          left: 10px;
-          right: 10px;
           gap: 8px;
         }
 

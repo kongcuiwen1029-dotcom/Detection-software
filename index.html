@@ -168,7 +168,10 @@
 
                   <article class="overview-heat-panel">
                     <div class="overview-heat-head">
-                      <h3>主机健康态势图</h3>
+                      <div class="overview-heat-copy">
+                        <h3>主机健康态势图</h3>
+                        <p>横向为时间，纵向为主机，同一横排表示同一台主机的连续状态变化</p>
+                      </div>
                       <div class="overview-heat-range" role="tablist" aria-label="主机健康态势图时间范围">
                         <button class="overview-heat-range-button active" type="button" data-heat-range="day" aria-pressed="true">天</button>
                         <button class="overview-heat-range-button" type="button" data-heat-range="week" aria-pressed="false">周</button>
@@ -176,17 +179,18 @@
                       </div>
                     </div>
                     <div class="overview-heat-wrap">
-                      <svg class="overview-heatmap" id="overviewHeatmap" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
-                      <div class="overview-heat-tooltip" id="overviewHeatTooltip" role="tooltip" aria-hidden="true"></div>
-                      <div class="overview-heat-axis" id="overviewHeatAxis" aria-hidden="true">
-                        <span>00:00</span>
-                        <span>03:00</span>
-                        <span>06:00</span>
-                        <span>09:00</span>
-                        <span>12:00</span>
-                        <span>15:00</span>
-                        <span>18:00</span>
-                        <span>21:00</span>
+                      <div class="overview-heat-hosts" id="overviewHeatHosts" aria-hidden="true"></div>
+                      <div class="overview-heat-canvas">
+                        <svg class="overview-heatmap" id="overviewHeatmap" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+                        <div class="overview-heat-tooltip" id="overviewHeatTooltip" role="tooltip" aria-hidden="true"></div>
+                        <div class="overview-heat-axis" id="overviewHeatAxis" aria-hidden="true">
+                          <span>00:00</span>
+                          <span>04:00</span>
+                          <span>08:00</span>
+                          <span>12:00</span>
+                          <span>16:00</span>
+                          <span>20:00</span>
+                        </div>
                       </div>
                     </div>
                   </article>
