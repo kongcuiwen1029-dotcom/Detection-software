@@ -23,6 +23,17 @@
         --shadow: 0 28px 60px rgba(74, 61, 34, 0.12);
         --shadow-soft: 0 14px 28px rgba(74, 61, 34, 0.08);
         --radius: 20px;
+        --overview-bg: #070915;
+        --overview-panel: #181938;
+        --overview-panel-deep: #11142d;
+        --overview-track: #24284f;
+        --overview-muted: #5f6698;
+        --overview-tick: #00dfff;
+        --overview-cyan: #00f0f2;
+        --overview-blue: #307cff;
+        --overview-violet: #8e2dff;
+        --overview-hot: #ff4f57;
+        --overview-amber: #ffa63f;
       }
 
       * {
@@ -1893,15 +1904,23 @@
       }
 
       .compact-topbar {
+        justify-content: flex-start;
         align-items: center;
+        padding: 16px 24px 8px;
       }
 
       .compact-topbar .title-wrap h1 {
-        margin-top: 10px;
+        margin: 8px 0 4px;
+        font-size: clamp(24px, 2.6vw, 32px);
+      }
+
+      .compact-topbar .title-wrap p {
+        font-size: 14px;
       }
 
       .compact-workspace {
         grid-template-columns: minmax(0, 1fr);
+        padding: 0 24px 18px;
       }
 
       .compact-stack {
@@ -1974,10 +1993,384 @@
         overflow-x: auto;
       }
 
+      .overview-stack {
+        gap: 0;
+      }
+
+      .overview-orion-panel {
+        --overview-panel-height: clamp(460px, calc(100vh - 154px), 760px);
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+        gap: clamp(22px, 2.2vw, 36px);
+        height: var(--overview-panel-height);
+        min-height: 0;
+        padding: 22px 26px 22px;
+        overflow: hidden;
+        color: #f8fbff;
+        font-family: "Open Sans", "Avenir Next", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at 14% 14%, rgba(54, 102, 255, 0.22), transparent 22%),
+          radial-gradient(circle at 82% 18%, rgba(255, 63, 96, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(7, 9, 21, 0.98), rgba(5, 7, 16, 0.98));
+        border: 1px solid rgba(71, 82, 139, 0.2);
+        border-radius: 32px;
+        box-shadow: 0 32px 90px rgba(2, 4, 12, 0.46);
+      }
+
+      .overview-orion-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(96, 110, 185, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(96, 110, 185, 0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(circle at center, black 28%, transparent 94%);
+      }
+
+      .overview-orion-panel::after {
+        content: "";
+        position: absolute;
+        inset: auto auto -140px -120px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(13, 120, 255, 0.18), transparent 72%);
+        filter: blur(20px);
+        pointer-events: none;
+      }
+
+      .overview-orion-left {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        align-content: start;
+        min-height: 0;
+        gap: clamp(18px, 2vh, 28px);
+        padding-top: 2px;
+      }
+
+      .overview-gauge-card {
+        display: flex;
+        justify-content: center;
+      }
+
+      .overview-gauge-shell {
+        position: relative;
+        width: min(100%, 360px, calc(var(--overview-panel-height) * 0.48));
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        isolation: isolate;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .overview-gauge-shell::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center, transparent 60%, rgba(0, 214, 255, 0.12) 68%, rgba(0, 214, 255, 0.04) 76%, transparent 86%);
+        filter: blur(10px);
+        opacity: 0.95;
+        pointer-events: none;
+      }
+
+      .overview-gauge-ticks,
+      .overview-gauge-orbit,
+      .overview-gauge-ring,
+      .overview-gauge-center {
+        position: absolute;
+      }
+
+      .overview-gauge-ticks {
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        filter: drop-shadow(0 0 6px rgba(0, 214, 255, 0.22));
+        opacity: 0.98;
+        pointer-events: none;
+      }
+
+      .overview-gauge-orbit {
+        inset: 72px;
+        border-radius: 50%;
+        box-shadow:
+          inset 0 0 36px rgba(0, 240, 242, 0.14),
+          inset 0 0 0 1px rgba(92, 103, 154, 0.08);
+      }
+
+      .overview-gauge-ring {
+        inset: 50px;
+        width: calc(100% - 100px);
+        height: calc(100% - 100px);
+        overflow: visible;
+        filter: drop-shadow(0 0 20px rgba(0, 240, 242, 0.12));
+      }
+
+      .overview-gauge-center {
+        inset: 106px;
+        display: grid;
+        place-content: center;
+        gap: 12px;
+        border-radius: 50%;
+        text-align: center;
+        background: radial-gradient(circle at top, rgba(17, 20, 45, 0.98), rgba(12, 15, 32, 0.98));
+        box-shadow: inset 0 0 0 1px rgba(95, 104, 152, 0.16);
+      }
+
+      .overview-gauge-icon {
+        display: inline-grid;
+        place-items: center;
+        color: #6f72ab;
+      }
+
+      .overview-gauge-label {
+        color: #6f72ab;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 2.8px;
+      }
+
+      .overview-gauge-value {
+        --gauge-number-size: clamp(48px, min(7vw, calc(var(--overview-panel-height) * 0.095)), 60px);
+        --gauge-symbol-size: clamp(18px, 2vw, 24px);
+        display: inline-flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 8px;
+        color: #ffffff;
+      }
+
+      .overview-gauge-value[data-digits="3"] {
+        --gauge-number-size: clamp(38px, min(5.8vw, calc(var(--overview-panel-height) * 0.08)), 50px);
+      }
+
+      .overview-gauge-value strong {
+        font-size: var(--gauge-number-size);
+        line-height: 0.95;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .overview-gauge-value span {
+        margin-top: clamp(7px, 0.9vw, 10px);
+        font-size: var(--gauge-symbol-size);
+        line-height: 1;
+      }
+
+      .overview-mini-list {
+        display: grid;
+        gap: clamp(16px, 2vh, 24px);
+      }
+
+      .overview-mini-card {
+        display: grid;
+        grid-template-columns: 46px minmax(120px, 1fr) minmax(160px, 1.2fr) auto;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .overview-mini-card-days {
+        grid-template-columns: 46px minmax(120px, 1fr) minmax(220px, 1.4fr);
+      }
+
+      .overview-mini-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        color: #6f72ab;
+        background: rgba(12, 15, 35, 0.74);
+        border: 1px solid rgba(85, 95, 154, 0.34);
+        border-radius: 10px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .overview-mini-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .overview-mini-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 16px;
+        letter-spacing: 0.44px;
+      }
+
+      .overview-mini-value {
+        color: #ffffff;
+        font-size: clamp(36px, 3.2vw, 42px);
+        line-height: 1;
+        font-weight: 800;
+      }
+
+      .overview-mini-trend {
+        min-width: 0;
+      }
+
+      .overview-mini-spark {
+        display: block;
+        width: 100%;
+        height: 30px;
+        overflow: visible;
+      }
+
+      .overview-mini-tail {
+        color: var(--overview-muted);
+        font-size: 14px;
+        letter-spacing: 0.44px;
+        white-space: nowrap;
+      }
+
+      .overview-days-segments {
+        display: grid;
+        grid-template-columns: repeat(13, minmax(0, 1fr));
+        gap: 4px;
+        align-items: center;
+      }
+
+      .overview-days-segments span {
+        height: 7px;
+        border-radius: 2px;
+        background: #24355a;
+      }
+
+      .overview-days-segments span.active {
+        background: linear-gradient(90deg, #ffa63f, #ffc254);
+        box-shadow: 0 0 14px rgba(255, 166, 63, 0.22);
+      }
+
+      .overview-heat-panel {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+        height: 100%;
+        padding: 16px 18px 14px;
+        background: linear-gradient(180deg, rgba(24, 25, 56, 0.96), rgba(20, 22, 48, 0.98));
+        border: 1px solid rgba(73, 84, 146, 0.16);
+        border-radius: 18px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .overview-heat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+
+      .overview-heat-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      .overview-heat-menu {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        color: #676d9d;
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+      }
+
+      .overview-heat-menu:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .overview-heat-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        height: 100%;
+        padding: 4px 0 28px;
+      }
+
+      .overview-heatmap {
+        display: block;
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .overview-heatmap polygon {
+        stroke: rgba(16, 20, 43, 0.42);
+        stroke-width: 1.1;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .overview-heat-axis {
+        position: absolute;
+        right: 18px;
+        bottom: 0;
+        left: 18px;
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .overview-heat-axis span {
+        position: relative;
+        padding-top: 14px;
+        color: #5b6190;
+        font-size: 14px;
+        letter-spacing: 0.44px;
+      }
+
+      .overview-heat-axis span::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 8px;
+        background: rgba(91, 97, 144, 0.34);
+      }
+
       @media (max-width: 1220px) {
         .compact-metrics,
         .compact-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .overview-orion-panel {
+          --overview-panel-height: clamp(430px, calc(100vh - 150px), 660px);
+          grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+        }
+
+        .overview-orion-left {
+          gap: 14px;
+        }
+
+        .overview-mini-list {
+          gap: 14px;
+        }
+      }
+
+      @media (max-width: 1040px) {
+        .overview-orion-panel {
+          grid-template-columns: 1fr;
+          --overview-panel-height: auto;
+          height: auto;
+        }
+
+        .overview-orion-left {
+          grid-template-columns: 1fr;
+          grid-template-rows: none;
         }
       }
 
@@ -1985,6 +2378,89 @@
         .compact-metrics,
         .compact-grid {
           grid-template-columns: 1fr;
+        }
+
+        .overview-orion-panel {
+          padding: 20px 18px 22px;
+          border-radius: 24px;
+        }
+
+        .overview-orion-left {
+          grid-template-columns: 1fr;
+        }
+
+        .overview-gauge-shell {
+          width: min(100%, 340px);
+        }
+
+        .overview-mini-card,
+        .overview-mini-card-days {
+          grid-template-columns: 46px 1fr;
+        }
+
+        .overview-mini-trend,
+        .overview-mini-tail,
+        .overview-days-segments {
+          grid-column: 2 / -1;
+        }
+
+        .overview-mini-tail {
+          margin-top: -4px;
+        }
+
+        .overview-heat-panel {
+          min-height: 520px;
+          padding: 18px 18px 16px;
+        }
+
+        .overview-heat-head h3 {
+          font-size: 20px;
+        }
+
+        .overview-heatmap {
+          min-height: 380px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .overview-orion-panel {
+          gap: 24px;
+          padding: 20px 16px 24px;
+        }
+
+        .overview-gauge-center {
+          inset: 88px;
+        }
+
+        .overview-gauge-value {
+          --gauge-number-size: clamp(42px, 11vw, 50px);
+          --gauge-symbol-size: clamp(16px, 5vw, 20px);
+        }
+
+        .overview-gauge-value[data-digits="3"] {
+          --gauge-number-size: clamp(34px, 9.4vw, 42px);
+        }
+
+        .overview-mini-title {
+          font-size: 15px;
+        }
+
+        .overview-mini-value {
+          font-size: 34px;
+        }
+
+        .overview-days-segments {
+          gap: 3px;
+        }
+
+        .overview-heat-axis {
+          left: 10px;
+          right: 10px;
+          gap: 8px;
+        }
+
+        .overview-heat-axis span {
+          font-size: 12px;
         }
       }
     

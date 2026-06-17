@@ -153,6 +153,7 @@ const floatingDigitMap = {
 
 const floatingMotion = { currentX: 0, currentY: 0, targetX: 0, targetY: 0 };
 const floatingDrag = { active: false, offsetX: 0, offsetY: 0, initialized: false };
+let overviewResizeFrame = 0;
 
 const navButtons = Array.from(document.querySelectorAll(".nav-item"));
 const sections = Array.from(document.querySelectorAll(".module-section"));
@@ -343,6 +344,62 @@ function createWave(base, amplitude, points, offset, min, max) {
   });
 }
 
+function renderGauge(targetId, value) {
+  const svg = document.getElementById(targetId);
+  if (!svg) return;
+
+  const safeValue = clamp(value, 0, 100);
+  const center = 160;
+  const radius = 118;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (safeValue / 100) * circumference;
+  const dashArray = `${progress} ${circumference - progress}`;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="${targetId}-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00f0f2"></stop>
+        <stop offset="52%" stop-color="#1f9eff"></stop>
+        <stop offset="76%" stop-color="#ff6b2d"></stop>
+        <stop offset="100%" stop-color="#8e2dff"></stop>
+      </linearGradient>
+      <filter id="${targetId}-glow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="4.5" result="blur"></feGaussianBlur>
+        <feMerge>
+          <feMergeNode in="blur"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+    </defs>
+    <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="rgba(36, 40, 79, 0.9)" stroke-width="12"></circle>
+    <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="rgba(0, 240, 242, 0.14)" stroke-width="16" stroke-dasharray="${dashArray}" stroke-linecap="round" filter="url(#${targetId}-glow)"></circle>
+    <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="url(#${targetId}-gradient)" stroke-width="10" stroke-dasharray="${dashArray}" stroke-linecap="round"></circle>
+  `;
+}
+
+function renderGaugeTicks(targetId) {
+  const svg = document.getElementById(targetId);
+  if (!svg) return;
+
+  const center = 180;
+  const innerRadius = 149;
+  const outerRadius = 166;
+  const tickCount = 96;
+
+  const lines = Array.from({ length: tickCount }, (_, index) => {
+    const angle = ((index * (360 / tickCount) - 90) * Math.PI) / 180;
+    const x1 = center + Math.cos(angle) * innerRadius;
+    const y1 = center + Math.sin(angle) * innerRadius;
+    const x2 = center + Math.cos(angle) * outerRadius;
+    const y2 = center + Math.sin(angle) * outerRadius;
+    const opacity = index % 4 === 0 ? 0.96 : 0.84;
+
+    return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="rgba(88, 241, 255, ${opacity})" stroke-width="1" stroke-linecap="round"></line>`;
+  }).join("");
+
+  svg.innerHTML = lines;
+}
+
 function renderSparkline(targetId, values, color) {
   const svg = document.getElementById(targetId);
   if (!svg) return;
@@ -360,6 +417,141 @@ function renderSparkline(targetId, values, color) {
     <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"></path>
     ${values.map((value, index) => `<circle cx="${index * step}" cy="${normalize(value)}" r="2.5" fill="${color}"></circle>`).join("")}
   `;
+}
+
+function renderGradientSparkline(targetId, values, stops) {
+  const svg = document.getElementById(targetId);
+  if (!svg) return;
+
+  const width = 272;
+  const height = 30;
+  const step = width / (values.length - 1);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const gradientId = `${targetId}-gradient`;
+  const normalize = (value) => {
+    const range = max - min || 1;
+    return height - ((value - min) / range) * 18 - 6;
+  };
+  const path = values.map((value, index) => `${index === 0 ? "M" : "L"} ${index * step} ${normalize(value)}`).join(" ");
+  const endX = (values.length - 1) * step;
+  const endY = normalize(values[values.length - 1]);
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+        ${stops.map((stop) => `<stop offset="${stop.offset}" stop-color="${stop.color}"></stop>`).join("")}
+      </linearGradient>
+    </defs>
+    <path d="${path}" fill="none" stroke="url(#${gradientId})" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path>
+    <circle cx="${endX}" cy="${endY}" r="3.4" fill="#13172f" stroke="${stops[stops.length - 1].color}" stroke-width="2.2"></circle>
+  `;
+}
+
+function renderDaysSegments(targetId, daysLeft) {
+  const container = document.getElementById(targetId);
+  if (!container) return;
+
+  const totalSegments = 13;
+  const amberCount = clamp(Math.round(totalSegments - daysLeft / 3), 1, totalSegments);
+  container.innerHTML = Array.from({ length: totalSegments }, (_, index) => `<span class="${index < amberCount ? "active" : ""}"></span>`).join("");
+}
+
+function createHexPoints(cx, cy, radius) {
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = ((60 * index - 30) * Math.PI) / 180;
+    const x = cx + radius * Math.cos(angle);
+    const y = cy + radius * Math.sin(angle);
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
+}
+
+function pseudoNoise(x, y, seed) {
+  const value = Math.sin(x * 12.9898 + y * 78.233 + seed * 37.719) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function gaussian(nx, ny, cx, cy, spreadX, spreadY) {
+  const dx = (nx - cx) / spreadX;
+  const dy = (ny - cy) / spreadY;
+  return Math.exp(-(dx * dx + dy * dy));
+}
+
+function pickOverviewHeatColor(nx, ny, stats) {
+  const noise = pseudoNoise(nx * 80 + liveTick * 0.8, ny * 80, stats.memoryAverage * 0.02);
+  const coolPrimary = gaussian(nx, ny, 0.08, 0.82, 0.18, 0.26);
+  const coolSecondary = gaussian(nx, ny, 0.22, 0.48, 0.14, 0.28);
+  const hotPrimary = gaussian(nx, ny, 0.78, 0.18, 0.22, 0.18);
+  const hotSecondary = gaussian(nx, ny, 0.62, 0.34, 0.18, 0.2);
+  const valley = gaussian(nx, ny, 0.45, 0.14, 0.18, 0.13) + gaussian(nx, ny, 0.84, 0.72, 0.16, 0.14) * 0.3;
+
+  const cool = (coolPrimary * 0.92 + coolSecondary * 0.68) * (0.64 + stats.cpuAverage / 210);
+  const hot = (hotPrimary * 0.94 + hotSecondary * 0.62) * (0.62 + stats.diskAverage / 180);
+
+  if (noise < 0.035 + valley * 0.08) return "#161937";
+
+  if (hot > cool && hot > 0.15) {
+    const level = hot + noise * 0.18;
+    if (level > 0.94) return "#ffd028";
+    if (level > 0.78) return "#ff2f4d";
+    if (level > 0.62) return "#ff4564";
+    if (level > 0.46) return "#b63863";
+    if (level > 0.3) return "#742f5f";
+    return "#3a2a59";
+  }
+
+  if (cool >= hot && cool > 0.15) {
+    const level = cool + noise * 0.18;
+    if (level > 0.94) return "#dde7ff";
+    if (level > 0.8) return "#2d80ff";
+    if (level > 0.64) return "#4a58ed";
+    if (level > 0.48) return "#4842cb";
+    if (level > 0.3) return "#2f2d78";
+    return "#242552";
+  }
+
+  if (noise > 0.92) return "#4a50dc";
+  if (noise < 0.12) return "#181a39";
+  return "#232554";
+}
+
+function renderOverviewHeatmap(targetId, stats) {
+  const svg = document.getElementById(targetId);
+  if (!svg) return;
+
+  const rect = svg.getBoundingClientRect();
+  const width = Math.max(320, Math.round(rect.width || 1000));
+  const height = Math.max(220, Math.round(rect.height || 620));
+  const paddingX = 18;
+  const paddingY = 14;
+  const usableWidth = Math.max(160, width - paddingX * 2);
+  const usableHeight = Math.max(120, height - paddingY * 2);
+  const radius = clamp(Math.min(usableWidth / 64, usableHeight / 34), 7.2, 10.4);
+  const hexWidth = Math.sqrt(3) * radius;
+  const stepX = hexWidth;
+  const stepY = radius * 1.5;
+  const columns = Math.max(14, Math.floor(usableWidth / hexWidth - 0.5));
+  const rows = Math.max(10, Math.floor((usableHeight - radius * 2) / stepY) + 1);
+  const gridWidth = (columns + 0.5) * hexWidth;
+  const gridHeight = radius * 2 + (rows - 1) * stepY;
+  const startX = (width - gridWidth) / 2 + hexWidth / 2;
+  const startY = (height - gridHeight) / 2 + radius;
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+  let cells = "";
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const x = startX + column * stepX + (row % 2 ? stepX / 2 : 0);
+      const y = startY + row * stepY;
+      const nx = column / (columns - 1);
+      const ny = row / (rows - 1);
+      cells += `<polygon points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
+    }
+  }
+
+  svg.innerHTML = cells;
 }
 
 function renderPagination(targetId, totalPages, activePage, onChange) {
@@ -417,34 +609,32 @@ function renderOverview() {
   const memoryAverage = Math.round(hosts.reduce((sum, host) => sum + host.memory, 0) / hosts.length);
   const diskAverage = Math.round(disks.reduce((sum, disk) => sum + disk.used, 0) / disks.length);
   const minDays = Math.min(...disks.map((disk) => disk.daysLeft));
+  const memoryTrend = createWave(memoryAverage, 6, 18, liveTick + 1.5, 24, 96);
+  const diskTrend = createWave(diskAverage, 4, 18, liveTick + 2.8, 36, 98);
 
-  document.getElementById("overviewCpuValue").textContent = `${cpuAverage}%`;
+  const overviewCpuValue = document.getElementById("overviewCpuValue");
+  overviewCpuValue.textContent = `${cpuAverage}`;
+  overviewCpuValue.parentElement?.setAttribute("data-digits", String(`${cpuAverage}`.length));
   document.getElementById("overviewMemoryValue").textContent = `${memoryAverage}%`;
   document.getElementById("overviewDiskValue").textContent = `${diskAverage}%`;
-  document.getElementById("overviewDaysValue").textContent = `${minDays} 天`;
+  document.getElementById("overviewDaysValue").textContent = `${minDays}天`;
+  document.getElementById("overviewMemoryHint").textContent = `${memoryTrend[memoryTrend.length - 1]}%`;
+  document.getElementById("overviewDiskHint").textContent = `${diskTrend[diskTrend.length - 1]}%`;
 
-  renderSparkline("overviewCpuSpark", createWave(cpuAverage, 8, 12, liveTick, 20, 96), getCssVar("--brand"));
-  renderSparkline("overviewMemorySpark", createWave(memoryAverage, 6, 12, liveTick + 1.5, 24, 96), "#76d38b");
-  renderSparkline("overviewDiskSpark", createWave(diskAverage, 3, 12, liveTick + 2.8, 36, 98), getCssVar("--accent"));
-  renderSparkline("overviewDaysSpark", createWave(minDays, 2, 12, liveTick + 3.1, 2, 30), "#ffb84d");
-
-  document.getElementById("overviewHostRows").innerHTML = hosts
-    .slice()
-    .sort((a, b) => b.cpu - a.cpu)
-    .slice(0, 4)
-    .map(
-      (host) => `
-        <div class="table-body-row">
-          <div class="row-title"><strong>${host.name}</strong></div>
-          <span>${host.ip}</span>
-          <strong>${host.cpu}%</strong>
-          <strong>${host.memory}%</strong>
-          <strong>${host.disk}%</strong>
-          <strong>${host.daysLeft} 天</strong>
-        </div>
-      `
-    )
-    .join("");
+  renderGaugeTicks("overviewCpuTicks");
+  renderGauge("overviewCpuRing", cpuAverage);
+  renderGradientSparkline("overviewMemorySpark", memoryTrend, [
+    { offset: "0%", color: "#00a7ff" },
+    { offset: "52%", color: "#3856ff" },
+    { offset: "100%", color: "#7affd6" }
+  ]);
+  renderGradientSparkline("overviewDiskSpark", diskTrend, [
+    { offset: "0%", color: "#00a7ff" },
+    { offset: "65%", color: "#3de6ff" },
+    { offset: "100%", color: "#8dfff0" }
+  ]);
+  renderDaysSegments("overviewDaysSegments", minDays);
+  renderOverviewHeatmap("overviewHeatmap", { cpuAverage, memoryAverage, diskAverage, minDays });
 }
 
 function renderDiskHostOptions() {
@@ -659,16 +849,8 @@ function renderWhitelistTable() {
 
 function renderBottomBar() {
   const disks = getAllDisks();
-  const cpuAverage = Math.round(hosts.reduce((sum, host) => sum + host.cpu, 0) / hosts.length);
-  const memoryAverage = Math.round(hosts.reduce((sum, host) => sum + host.memory, 0) / hosts.length);
-  const diskAverage = Math.round(disks.reduce((sum, disk) => sum + disk.used, 0) / disks.length);
   const minDays = Math.min(...disks.map((disk) => disk.daysLeft));
   const hottestHost = hosts.slice().sort((a, b) => b.temp - a.temp)[0];
-
-  document.getElementById("bottomCpu").textContent = `${cpuAverage}%`;
-  document.getElementById("bottomMemory").textContent = `${memoryAverage}%`;
-  document.getElementById("bottomDisk").textContent = `${diskAverage}%`;
-  document.getElementById("bottomDays").textContent = `${minDays} 天`;
 
   updateFloatingDisplay(minDays, hottestHost.temp);
 }
@@ -768,11 +950,14 @@ function bindEvents() {
     button.addEventListener("click", () => showModule(button.dataset.moduleTarget));
   });
 
-  document.getElementById("globalRefresh").addEventListener("click", () => {
-    mutateLiveData();
-    renderAll();
-    showToast("数据已刷新。");
-  });
+  const globalRefreshButton = document.getElementById("globalRefresh");
+  if (globalRefreshButton) {
+    globalRefreshButton.addEventListener("click", () => {
+      mutateLiveData();
+      renderAll();
+      showToast("数据已刷新。");
+    });
+  }
 
   document.getElementById("cancelModal").addEventListener("click", closeModal);
   document.getElementById("confirmModal").addEventListener("click", () => {
@@ -1030,7 +1215,11 @@ function bindEvents() {
   });
   document.addEventListener("mouseleave", resetFloatingTilt);
   window.addEventListener("blur", resetFloatingTilt);
-  window.addEventListener("resize", () => syncFloatingWidgetPosition());
+  window.addEventListener("resize", () => {
+    syncFloatingWidgetPosition();
+    window.cancelAnimationFrame(overviewResizeFrame);
+    overviewResizeFrame = window.requestAnimationFrame(() => renderOverview());
+  });
 }
 
 bindEvents();

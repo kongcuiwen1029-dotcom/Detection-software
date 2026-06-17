@@ -91,64 +91,111 @@
             <h1 id="pageTitle">总览首页</h1>
             <p id="pageSubtitle">CPU、内存、磁盘、预计可用时长</p>
           </div>
-          <div class="top-actions">
-            <span class="pill">生产环境</span>
-            <button class="primary-button" id="globalRefresh">刷新数据</button>
-          </div>
         </header>
 
         <div class="workspace compact-workspace">
           <main class="content-stage">
             <section class="module-section active" data-module="overview">
-              <div class="section-stack compact-stack">
-                <section class="metrics-grid compact-metrics">
-                  <article class="metric-card">
-                    <div class="metric-top">
-                      <span>CPU 使用率</span>
-                    </div>
-                    <div class="metric-value" id="overviewCpuValue">0%</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewCpuSpark"></svg>
-                  </article>
-                  <article class="metric-card">
-                    <div class="metric-top">
-                      <span>内存使用率</span>
-                    </div>
-                    <div class="metric-value" id="overviewMemoryValue">0%</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewMemorySpark"></svg>
-                  </article>
-                  <article class="metric-card">
-                    <div class="metric-top">
-                      <span>磁盘空间使用情况</span>
-                    </div>
-                    <div class="metric-value" id="overviewDiskValue">0%</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewDiskSpark"></svg>
-                  </article>
-                  <article class="metric-card">
-                    <div class="metric-top">
-                      <span>预计可用时长</span>
-                    </div>
-                    <div class="metric-value" id="overviewDaysValue">0 天</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewDaysSpark"></svg>
-                  </article>
-                </section>
+              <div class="section-stack compact-stack overview-stack">
+                <section class="overview-orion-panel" aria-label="首页健康总览">
+                  <div class="overview-orion-left">
+                    <article class="overview-gauge-card">
+                      <div class="overview-gauge-shell" aria-label="CPU 使用率总览">
+                        <svg class="overview-gauge-ticks" viewBox="0 0 360 360" id="overviewCpuTicks" aria-hidden="true"></svg>
+                        <div class="overview-gauge-orbit" aria-hidden="true"></div>
+                        <svg class="overview-gauge-ring" viewBox="0 0 320 320" id="overviewCpuRing" aria-hidden="true"></svg>
+                        <div class="overview-gauge-center">
+                          <div class="overview-gauge-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                              <rect x="3" y="13" width="4" height="10" rx="1.2" fill="currentColor"></rect>
+                              <rect x="10" y="7" width="4" height="16" rx="1.2" fill="currentColor"></rect>
+                              <rect x="17" y="3" width="4" height="20" rx="1.2" fill="currentColor"></rect>
+                            </svg>
+                          </div>
+                          <span class="overview-gauge-label">CPU使用率</span>
+                          <div class="overview-gauge-value">
+                            <strong id="overviewCpuValue">0</strong>
+                            <span>%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
 
-                <section class="panel table-layout">
-                  <div class="section-head compact-head">
-                    <div>
-                      <h3>重点主机</h3>
+                    <div class="overview-mini-list">
+                      <article class="overview-mini-card">
+                        <div class="overview-mini-icon" aria-hidden="true">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M4 12h4l2-5 4 10 2-5h4"></path>
+                          </svg>
+                        </div>
+                        <div class="overview-mini-copy">
+                          <span class="overview-mini-title">内存使用率</span>
+                          <strong class="overview-mini-value" id="overviewMemoryValue">0%</strong>
+                        </div>
+                        <div class="overview-mini-trend">
+                          <svg class="overview-mini-spark" viewBox="0 0 272 30" id="overviewMemorySpark" aria-hidden="true"></svg>
+                        </div>
+                        <span class="overview-mini-tail" id="overviewMemoryHint">0%</span>
+                      </article>
+
+                      <article class="overview-mini-card">
+                        <div class="overview-mini-icon" aria-hidden="true">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M5 16c1.8-3 4-4.5 6.5-4.5 2.2 0 3.8.7 5.3 2.1 1.5 1.4 2.9 2.1 4.2 2.1"></path>
+                            <path d="M18.5 7a4 4 0 1 0 0 8 4 4 0 1 0 0-8Z"></path>
+                          </svg>
+                        </div>
+                        <div class="overview-mini-copy">
+                          <span class="overview-mini-title">磁盘空间使用率</span>
+                          <strong class="overview-mini-value" id="overviewDiskValue">0%</strong>
+                        </div>
+                        <div class="overview-mini-trend">
+                          <svg class="overview-mini-spark" viewBox="0 0 272 30" id="overviewDiskSpark" aria-hidden="true"></svg>
+                        </div>
+                        <span class="overview-mini-tail" id="overviewDiskHint">0%</span>
+                      </article>
+
+                      <article class="overview-mini-card overview-mini-card-days">
+                        <div class="overview-mini-icon" aria-hidden="true">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                            <path d="M8 9h8M8 13h4"></path>
+                          </svg>
+                        </div>
+                        <div class="overview-mini-copy">
+                          <span class="overview-mini-title">预计可用时长</span>
+                          <strong class="overview-mini-value" id="overviewDaysValue">0天</strong>
+                        </div>
+                        <div class="overview-days-segments" id="overviewDaysSegments" aria-hidden="true"></div>
+                      </article>
                     </div>
                   </div>
-                  <div class="data-table overview-table">
-                    <div class="table-head">
-                      <span>主机</span>
-                      <span>IP</span>
-                      <span>CPU</span>
-                      <span>内存</span>
-                      <span>磁盘</span>
-                      <span>预计可用</span>
+
+                  <article class="overview-heat-panel">
+                    <div class="overview-heat-head">
+                      <h3>主机健康态势图</h3>
+                      <button class="overview-heat-menu" type="button" aria-label="更多选项">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                          <circle cx="10" cy="4" r="1.5"></circle>
+                          <circle cx="10" cy="10" r="1.5"></circle>
+                          <circle cx="10" cy="16" r="1.5"></circle>
+                        </svg>
+                      </button>
                     </div>
-                    <div id="overviewHostRows"></div>
-                  </div>
+                    <div class="overview-heat-wrap">
+                      <svg class="overview-heatmap" id="overviewHeatmap" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+                      <div class="overview-heat-axis" aria-hidden="true">
+                        <span>00:00</span>
+                        <span>03:00</span>
+                        <span>06:00</span>
+                        <span>09:00</span>
+                        <span>12:00</span>
+                        <span>15:00</span>
+                        <span>18:00</span>
+                        <span>21:00</span>
+                      </div>
+                    </div>
+                  </article>
                 </section>
               </div>
             </section>
@@ -503,15 +550,6 @@
       </div>
     </section>
 
-    <section class="bottom-bar compact-bottom-bar">
-      <div class="bottom-metrics">
-        <div class="bottom-chip"><span class="bottom-dot cpu"></span><span>CPU <strong id="bottomCpu">0%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot mem"></span><span>内存 <strong id="bottomMemory">0%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot disk"></span><span>磁盘 <strong id="bottomDisk">0%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot alert"></span><span>预计可用 <strong id="bottomDays">0 天</strong></span></div>
-      </div>
-    </section>
-
     <div class="drawer-overlay" id="detailDrawerOverlay">
       <aside class="drawer">
         <div class="section-head compact-head">
@@ -556,6 +594,7 @@
 
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>
