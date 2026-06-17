@@ -338,11 +338,14 @@ function getAllDisks() {
   );
 }
 
-function getHostHealthSummary(host) {
-  if (host.status === "离线") {
-    return "主机当前离线，采集数据已停更，需要优先检查网络连通性与采集代理状态。";
-  }
-  if (host.status === "异常") {
+function getHeatCellDisplayStatus(fillColor) {
+  const normalized = String(fillColor || "").toLowerCase();
+  const abnormalColors = new Set(["#ffd028", "#ff2f4d", "#ff4564", "#b63863", "#742f5f"]);
+  return abnormalColors.has(normalized) ? "异常" : "在线";
+}
+
+function getHostHealthSummary(host, displayStatus) {
+  if (displayStatus === "异常") {
     return `主机资源波动明显，当前 CPU ${host.cpu}% / 内存 ${host.memory}% / 磁盘 ${host.disk}% ，需要尽快处理高负载项。`;
   }
   if (host.daysLeft <= 7) {
@@ -357,14 +360,11 @@ function getHostHealthSummary(host) {
   if (host.cpu >= thresholdConfig.cpuThreshold) {
     return `CPU 占比接近阈值，当前已达 ${host.cpu}% ，建议关注批处理任务与异常进程。`;
   }
-  return "主机当前整体运行平稳，核心指标处于可控区间，建议保持持续观察。";
+  return "主机当前在线且整体运行平稳，核心指标处于可控区间，建议保持持续观察。";
 }
 
-function getHostRecommendedAction(host) {
-  if (host.status === "离线") {
-    return "检查主机网络、心跳服务与采集代理进程，恢复在线后补采最近监测数据。";
-  }
-  if (host.status === "异常") {
+function getHostRecommendedAction(host, displayStatus) {
+  if (displayStatus === "异常") {
     return "优先打开主机详情定位高占用进程，并结合告警中心确认是否需要限流或重启相关服务。";
   }
   if (host.daysLeft <= 7 || host.disk >= thresholdConfig.diskThreshold) {
@@ -405,15 +405,16 @@ function hideOverviewHeatTooltip() {
 
 function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
   if (!overviewHeatTooltip) return;
+  const displayStatus = getHeatCellDisplayStatus(polygon.getAttribute("fill"));
 
   overviewHeatTooltip.innerHTML = `
     <div class="overview-heat-tooltip-head">
       <h4 class="overview-heat-tooltip-title">${host.name}</h4>
-      ${formatStatusBadge(host.status)}
+      ${formatStatusBadge(displayStatus)}
     </div>
     <div class="overview-heat-tooltip-summary">
       <span class="overview-heat-tooltip-label">摘要</span>
-      <p>${getHostHealthSummary(host)}</p>
+      <p>${getHostHealthSummary(host, displayStatus)}</p>
     </div>
     <div class="overview-heat-tooltip-metrics">
       <div class="overview-heat-tooltip-metric"><span>CPU 占比</span><strong>${host.cpu}%</strong></div>
@@ -423,7 +424,7 @@ function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
     </div>
     <div class="overview-heat-tooltip-action">
       <span class="overview-heat-tooltip-label">建议动作</span>
-      <p>${getHostRecommendedAction(host)}</p>
+      <p>${getHostRecommendedAction(host, displayStatus)}</p>
     </div>
   `;
 
@@ -615,6 +616,7 @@ function pickOverviewHeatColor(nx, ny, stats) {
 function renderOverviewHeatmap(targetId, stats) {
   const svg = document.getElementById(targetId);
   if (!svg) return;
+  hideOverviewHeatTooltip();
 
   const rect = svg.getBoundingClientRect();
   const width = Math.max(320, Math.round(rect.width || 1000));
@@ -639,35 +641,31 @@ function renderOverviewHeatmap(targetId, stats) {
 
   let cells = "";
   for (let row = 0; row < rows; row += 1) {
+    const host = hosts[row % hosts.length];
     for (let column = 0; column < columns; column += 1) {
       const x = startX + column * stepX + (row % 2 ? stepX / 2 : 0);
       const y = startY + row * stepY;
       const nx = column / (columns - 1);
       const ny = row / (rows - 1);
-      const host = hosts[(row * columns + column) % hosts.length];
       cells += `<polygon data-host-id="${host.id}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
     }
   }
 
   svg.innerHTML = cells;
-  svg.querySelectorAll("polygon").forEach((polygon) => {
-    const hostId = polygon.dataset.hostId;
-    polygon.addEventListener("pointerenter", (event) => {
-      const host = getHostById(hostId);
-      if (!host) return;
-      showOverviewHeatTooltip(host, polygon, event.clientX, event.clientY);
-    });
-    polygon.addEventListener("pointermove", (event) => {
-      const host = getHostById(hostId);
-      if (!host) return;
-      showOverviewHeatTooltip(host, polygon, event.clientX, event.clientY);
-    });
-    polygon.addEventListener("pointerleave", () => {
-      polygon.classList.remove("is-active");
+  svg.onpointermove = (event) => {
+    const polygon = event.target instanceof SVGPolygonElement ? event.target : null;
+    if (!polygon) {
       hideOverviewHeatTooltip();
-    });
-  });
-  svg.addEventListener("pointerleave", hideOverviewHeatTooltip);
+      return;
+    }
+    const host = getHostById(polygon.dataset.hostId);
+    if (!host) {
+      hideOverviewHeatTooltip();
+      return;
+    }
+    showOverviewHeatTooltip(host, polygon, event.clientX, event.clientY);
+  };
+  svg.onpointerleave = hideOverviewHeatTooltip;
 }
 
 function renderPagination(targetId, totalPages, activePage, onChange) {

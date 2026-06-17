@@ -2151,9 +2151,9 @@
       }
 
       .overview-gauge-value strong {
-        font-size: var(--gauge-number-size);
+        font-size: 48px;
         line-height: 0.95;
-        font-weight: 700;
+        font-weight: 600;
         letter-spacing: -0.03em;
       }
 
