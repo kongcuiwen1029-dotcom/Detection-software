@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PulseDesk 监测软件交互原型</title>
+    <title>健康监控</title>
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body>
@@ -12,8 +12,8 @@
         <div class="brand">
           <div class="brand-mark" aria-hidden="true"></div>
           <div class="brand-copy">
-            <strong>PulseDesk</strong>
-            <span>监测软件交互原型 · v3.8.2</span>
+            <strong>健康监控</strong>
+            <span>核心监控版 · v4.2.0</span>
           </div>
         </div>
 
@@ -24,968 +24,463 @@
                 <path d="M4 12h6V4H4v8Zm10 8h6v-6h-6v6ZM4 20h6v-4H4v4Zm10-8h6V4h-6v8Z"></path>
               </svg>
             </span>
-            <span class="nav-copy"><strong>首页总览</strong><span>运行态势与待处理项</span></span>
+            <span class="nav-copy"><strong>总览首页</strong><span>4 个核心指标</span></span>
           </button>
-          <button class="nav-item" data-module-target="health">
+          <button class="nav-item" data-module-target="hosts">
             <span class="nav-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 21s-6.5-4.3-8.5-8.2A5.1 5.1 0 0 1 12 6a5.1 5.1 0 0 1 8.5 6.8C18.5 16.7 12 21 12 21Z"></path>
+                <rect x="4" y="5" width="16" height="11" rx="2"></rect>
+                <path d="M8 20h8M12 16v4"></path>
               </svg>
             </span>
-            <span class="nav-copy"><strong>硬件体检</strong><span>异常识别与修复建议</span></span>
+            <span class="nav-copy"><strong>主机监控</strong><span>主机列表</span></span>
           </button>
-          <button class="nav-item" data-module-target="hardware">
+          <button class="nav-item" data-module-target="processes">
             <span class="nav-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <rect x="7" y="7" width="10" height="10" rx="2"></rect>
-                <path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"></path>
+                <path d="M6 5h12M6 12h12M6 19h12"></path>
+                <circle cx="8" cy="5" r="1"></circle>
+                <circle cx="8" cy="12" r="1"></circle>
+                <circle cx="8" cy="19" r="1"></circle>
               </svg>
             </span>
-            <span class="nav-copy"><strong>硬件参数 / 检测</strong><span>全量识别与报告导出</span></span>
+            <span class="nav-copy"><strong>进程分析</strong><span>高占用进程</span></span>
           </button>
-          <button class="nav-item" data-module-target="benchmark">
+          <button class="nav-item" data-module-target="disks">
             <span class="nav-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 5a8 8 0 1 0 8 8"></path>
-                <path d="m12 12 5-5"></path>
-                <path d="M17 4h3v3"></path>
+                <ellipse cx="12" cy="6" rx="7" ry="3"></ellipse>
+                <path d="M5 6v8c0 1.7 3.1 3 7 3s7-1.3 7-3V6"></path>
+                <path d="M5 10c0 1.7 3.1 3 7 3s7-1.3 7-3"></path>
               </svg>
             </span>
-            <span class="nav-copy"><strong>硬件评测</strong><span>整机跑分与性能对比</span></span>
+            <span class="nav-copy"><strong>磁盘趋势</strong><span>空间与预测</span></span>
           </button>
-          <button class="nav-item" data-module-target="monitor">
+          <button class="nav-item" data-module-target="alerts">
             <span class="nav-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M3 16h4l2.5-7L14 18l2.5-6H21"></path>
+                <path d="M12 9v4"></path>
+                <path d="M12 17h.01"></path>
+                <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
               </svg>
             </span>
-            <span class="nav-copy"><strong>硬件防护 / 监控</strong><span>温度阈值与实时曲线</span></span>
+            <span class="nav-copy"><strong>告警中心</strong><span>确认与关闭</span></span>
           </button>
-          <button class="nav-item" data-module-target="cleanup">
+          <button class="nav-item" data-module-target="settings">
             <span class="nav-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"></path>
+                <path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 1 0 12 8.5z"></path>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"></path>
               </svg>
             </span>
-            <span class="nav-copy"><strong>清理优化</strong><span>垃圾清理与空间释放</span></span>
-          </button>
-          <button class="nav-item" data-module-target="driver">
-            <span class="nav-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M7 8h10M7 12h10M7 16h6"></path>
-                <rect x="4" y="4" width="16" height="16" rx="3"></rect>
-              </svg>
-            </span>
-            <span class="nav-copy"><strong>驱动检测 / 管理</strong><span>扫描更新与安装进度</span></span>
+            <span class="nav-copy"><strong>系统设置</strong><span>阈值与白名单</span></span>
           </button>
         </nav>
 
         <div class="sidebar-note">
-          <strong>当前权限</strong>
-          <span>角色：管理员</span>
-          <span>设备组：研发终端 A 区</span>
-          <span>策略：允许驱动安装、深度清理、长期趋势保留</span>
+          <strong>当前模式</strong>
+          <span>仅保留核心监控功能</span>
+          <span>角色：系统管理员</span>
         </div>
       </aside>
 
       <div class="main-shell">
-        <header class="topbar">
+        <header class="topbar compact-topbar">
           <div class="title-wrap">
-            <div class="eyebrow">终端监测中心</div>
-            <h1 id="pageTitle">设备总览</h1>
-            <p id="pageSubtitle">集中查看 CPU、内存、日志缓存、驱动状态与待处理风险，并可从概览快速进入体检、清理、评测与实时监控链路。</p>
+            <div class="eyebrow">健康监控</div>
+            <h1 id="pageTitle">总览首页</h1>
+            <p id="pageSubtitle">CPU、内存、磁盘、预计可用时长</p>
           </div>
           <div class="top-actions">
-            <span class="pill">版本 3.8.2</span>
-            <button class="ghost-button" id="openExport">导出报告</button>
-            <button class="ghost-button" id="openSettings">阈值设置</button>
-            <button class="primary-button" id="globalScan">一键体检</button>
-            <div class="window-controls" aria-label="窗口控制">
-              <span class="window-dot"></span>
-              <span class="window-dot"></span>
-              <span class="window-dot"></span>
-            </div>
+            <span class="pill">生产环境</span>
+            <button class="primary-button" id="globalRefresh">刷新数据</button>
           </div>
         </header>
 
-        <div class="workspace">
+        <div class="workspace compact-workspace">
           <main class="content-stage">
             <section class="module-section active" data-module="overview">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>当前终端运行稳定，仍有 3 项建议优化与 1 项高优先风险待处理。</h2>
-                    <p>本界面以“主窗口 + 结果右栏 + 底部实时监控 + 悬浮面板”的形式组织，覆盖首页总览、体检、硬件识别、性能评测、实时防护、清理优化与驱动管理的核心交互。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong id="overviewCpuValue">42%</strong>
-                        <span>CPU 实时占比</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong id="overviewMemoryValue">11.8 GB</strong>
-                        <span>可用内存余额</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>11 天</strong>
-                        <span>剩余日志缓存可用天数</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong id="overviewTempValue">67°C</strong>
-                        <span>核心区实时温度</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">今日扫描摘要</span>
-                      <span class="value">18 / 21</span>
-                      <span class="delta positive">3 项已修复</span>
-                    </div>
-                    <div class="mini-card">
-                      <span class="label">驱动更新窗口</span>
-                      <span class="value">2 项</span>
-                      <span class="delta warning">1 项需重启</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" data-jump="monitor">打开监控面板</button>
-                      <button class="ghost-button" data-jump="cleanup">进入清理优化</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="metrics-grid">
+              <div class="section-stack compact-stack">
+                <section class="metrics-grid compact-metrics">
                   <article class="metric-card">
                     <div class="metric-top">
-                      <span>CPU 占比波动</span>
-                      <span class="status-badge normal">稳定</span>
+                      <span>CPU 使用率</span>
                     </div>
-                    <div class="metric-value" id="cpuMetricLarge">42%</div>
+                    <div class="metric-value" id="overviewCpuValue">0%</div>
                     <svg class="sparkline" viewBox="0 0 280 58" id="overviewCpuSpark"></svg>
                   </article>
                   <article class="metric-card">
                     <div class="metric-top">
-                      <span>内存余额</span>
-                      <span class="status-badge warning">偏紧</span>
+                      <span>内存使用率</span>
                     </div>
-                    <div class="metric-value">11.8 GB</div>
+                    <div class="metric-value" id="overviewMemoryValue">0%</div>
                     <svg class="sparkline" viewBox="0 0 280 58" id="overviewMemorySpark"></svg>
                   </article>
                   <article class="metric-card">
                     <div class="metric-top">
-                      <span>日志缓存剩余</span>
-                      <span class="status-badge normal">充足</span>
+                      <span>磁盘空间使用情况</span>
                     </div>
-                    <div class="metric-value">11 天</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewLogSpark"></svg>
+                    <div class="metric-value" id="overviewDiskValue">0%</div>
+                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewDiskSpark"></svg>
                   </article>
                   <article class="metric-card">
                     <div class="metric-top">
-                      <span>实时温度</span>
-                      <span class="status-badge danger">高温边缘</span>
+                      <span>预计可用时长</span>
                     </div>
-                    <div class="metric-value" id="tempMetricLarge">67°C</div>
-                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewTempSpark"></svg>
+                    <div class="metric-value" id="overviewDaysValue">0 天</div>
+                    <svg class="sparkline" viewBox="0 0 280 58" id="overviewDaysSpark"></svg>
                   </article>
                 </section>
 
-                <section class="grid-2">
-                  <article class="panel chart-card">
-                    <div class="section-head">
-                      <div>
-                        <h3>运行态势曲线</h3>
-                        <p>按分钟回放 CPU、GPU、内存利用率，并在超过阈值时显示明显色差与事件标记。</p>
-                      </div>
-                      <div class="chart-key">
-                        <span><i class="cpu"></i>CPU</span>
-                        <span><i class="gpu"></i>GPU</span>
-                        <span><i class="memory"></i>内存</span>
-                      </div>
-                    </div>
-                    <div class="chart-shell">
-                      <div class="chart-header">
-                        <div>
-                          <div class="label">过去 60 分钟平均负载</div>
-                          <strong>58%</strong>
-                        </div>
-                        <div class="muted">自动刷新中 · 每 3 秒更新</div>
-                      </div>
-                      <svg class="monitor-svg" id="overviewMonitorChart" viewBox="0 0 760 220"></svg>
-                    </div>
-                  </article>
-
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>待处理事项</h3>
-                        <p>聚合高优先风险、计划内任务与管理员动作。</p>
-                      </div>
-                      <button class="ghost-button" data-jump="health">查看体检详情</button>
-                    </div>
-                    <div class="alert-list">
-                      <div class="alert-item">
-                        <span class="risk-badge high">高优先</span>
-                        <div>
-                          <strong>GPU 温度持续 5 分钟高于 82°C</strong>
-                          <span>建议立即检查散热策略并开启一键降温。</span>
-                        </div>
-                        <button class="table-action primary" data-modal="cooling">立即处理</button>
-                      </div>
-                      <div class="alert-item">
-                        <span class="risk-badge medium">中优先</span>
-                        <div>
-                          <strong>驱动兼容补丁待安装</strong>
-                          <span>音频驱动更新包需要管理员确认后执行。</span>
-                        </div>
-                        <button class="table-action" data-jump="driver">前往更新</button>
-                      </div>
-                      <div class="alert-item">
-                        <span class="risk-badge low">建议</span>
-                        <div>
-                          <strong>日志缓存占用 6.2 GB</strong>
-                          <span>清理后预计释放 4.8 GB，适合在低峰时段执行。</span>
-                        </div>
-                        <button class="table-action" data-jump="cleanup">去清理</button>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-              </div>
-            </section>
-
-            <section class="module-section" data-module="health">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>全量体检支持一键扫描、风险摘要、处理建议、复检与历史保留。</h2>
-                    <p>扫描型交互采用“开始体检 -> 过程展示 -> 输出问题 -> 修复与忽略 -> 复检”的链路，并为高风险项补充确认、日志与结果回执。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong id="healthProgressText">0%</strong>
-                        <span>当前扫描进度</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>21 项</strong>
-                        <span>预置检查对象</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>4 分 20 秒</strong>
-                        <span>近似扫描时长</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">最近一次体检</span>
-                      <span class="value">09:42</span>
-                      <span class="delta positive">已修复 3 项</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="startHealthScan">开始体检</button>
-                      <button class="ghost-button" id="recheckHealth">复检</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="dual-grid">
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>扫描进度与摘要</h3>
-                        <p>扫描过程中展示当前检测对象、完成率、预计耗时与问题总数。</p>
-                      </div>
-                    </div>
-                    <div class="progress-shell">
-                      <div class="progress-bar"><div class="progress-value" id="healthProgressBar"></div></div>
-                      <div class="data-row">
-                        <span>当前检查项</span>
-                        <strong id="healthCurrentStep">等待开始</strong>
-                      </div>
-                      <div class="data-row">
-                        <span>问题摘要</span>
-                        <strong id="healthIssueCount">0 项异常 / 0 项建议</strong>
-                      </div>
-                    </div>
-                  </article>
-
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>体检结果统计</h3>
-                        <p>按风险级别聚合结果，为处理优先级提供依据。</p>
-                      </div>
-                    </div>
-                    <div class="state-matrix">
-                      <div class="state-box">
-                        <span class="muted">高风险</span>
-                        <strong id="healthHighCount">1</strong>
-                      </div>
-                      <div class="state-box">
-                        <span class="muted">中风险</span>
-                        <strong id="healthMediumCount">2</strong>
-                      </div>
-                      <div class="state-box">
-                        <span class="muted">建议项</span>
-                        <strong id="healthLowCount">3</strong>
-                      </div>
-                      <div class="state-box">
-                        <span class="muted">已忽略</span>
-                        <strong id="healthIgnoredCount">0</strong>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-
-                <section class="panel">
-                  <div class="section-head">
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
                     <div>
-                      <h3>问题清单</h3>
-                      <p>每条问题都提供查看详情、立即修复、忽略本项与复检入口。</p>
-                    </div>
-                    <div class="row-actions">
-                      <button class="ghost-button" id="repairSelected">立即修复</button>
-                      <button class="ghost-button" id="ignoreSelected">忽略本项</button>
+                      <h3>重点主机</h3>
                     </div>
                   </div>
-                  <div class="timeline-list" id="issueList">
-                    <div class="issue-item">
-                      <span class="risk-badge high">高风险</span>
-                      <div class="issue-copy">
-                        <strong>GPU 高温告警</strong>
-                        <span>在高负载窗口内持续高于 82°C，建议立即执行降温策略。</span>
-                      </div>
-                      <div class="row-actions">
-                        <button class="table-action" data-detail="gpu-heat">查看详情</button>
-                        <button class="table-action primary" data-modal="cooling">立即修复</button>
-                      </div>
+                  <div class="data-table overview-table">
+                    <div class="table-head">
+                      <span>主机</span>
+                      <span>IP</span>
+                      <span>CPU</span>
+                      <span>内存</span>
+                      <span>磁盘</span>
+                      <span>预计可用</span>
                     </div>
-                    <div class="issue-item">
-                      <span class="risk-badge medium">中风险</span>
-                      <div class="issue-copy">
-                        <strong>磁盘空间趋紧</strong>
-                        <span>C 盘仅剩 9.6%，建议进行日志缓存与临时文件清理。</span>
-                      </div>
-                      <div class="row-actions">
-                        <button class="table-action" data-jump="cleanup">前往清理</button>
-                        <button class="table-action">忽略本项</button>
-                      </div>
-                    </div>
-                    <div class="issue-item">
-                      <span class="risk-badge low">建议</span>
-                      <div class="issue-copy">
-                        <strong>音频驱动补丁可更新</strong>
-                        <span>兼容性补丁已发布，可在驱动管理中批量安装。</span>
-                      </div>
-                      <div class="row-actions">
-                        <button class="table-action" data-jump="driver">去处理</button>
-                        <button class="table-action">加入忽略</button>
-                      </div>
-                    </div>
+                    <div id="overviewHostRows"></div>
                   </div>
                 </section>
               </div>
             </section>
 
-            <section class="module-section" data-module="hardware">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>硬件检测页面展示完整识别结果，并支持复制单项信息与导出完整报告。</h2>
-                    <p>参数结构采用分类卡片 + 参数行列表，适合承载 CPU、主板、内存、显卡、硬盘、显示器、电池、网络与系统信息。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong>9 类</strong>
-                        <span>参数模块</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>84 项</strong>
-                        <span>识别字段</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>TXT / CSV / PDF</strong>
-                        <span>支持导出格式</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">设备编号</span>
-                      <span class="value" style="font-size: 24px;">PD-A17-042</span>
-                      <span class="delta positive">已绑定资产台账</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="copyHardware">复制摘要</button>
-                      <button class="ghost-button" data-modal="export">导出报告</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="panel">
-                  <div class="section-head">
+            <section class="module-section" data-module="hosts">
+              <div class="section-stack compact-stack">
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
                     <div>
-                      <h3>硬件识别结果</h3>
-                      <p>每个模块按“关键指标 + 详细字段”方式展开，并保留复制、导出与详情扩展能力。</p>
-                    </div>
-                    <button class="ghost-button" data-modal="export">导出完整报告</button>
-                  </div>
-                  <div class="spec-grid">
-                    <article class="spec-item">
-                      <strong>CPU</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>型号</span><small>Intel Core i9-14900HX</small></div>
-                        <div class="data-row"><span>核心 / 线程</span><small>24 / 32</small></div>
-                        <div class="data-row"><span>主频</span><small>2.2 GHz / 5.8 GHz</small></div>
-                        <div class="data-row"><span>温度</span><small>67°C</small></div>
-                      </div>
-                    </article>
-                    <article class="spec-item">
-                      <strong>主板</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>品牌</span><small>ASUS</small></div>
-                        <div class="data-row"><span>型号</span><small>Z790 Mobile</small></div>
-                        <div class="data-row"><span>BIOS 版本</span><small>318.14</small></div>
-                        <div class="data-row"><span>序列</span><small>MB-09H2-3LX</small></div>
-                      </div>
-                    </article>
-                    <article class="spec-item">
-                      <strong>内存</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>容量</span><small>32 GB</small></div>
-                        <div class="data-row"><span>频率</span><small>5600 MT/s</small></div>
-                        <div class="data-row"><span>插槽占用</span><small>2 / 2</small></div>
-                        <div class="data-row"><span>使用率</span><small>63%</small></div>
-                      </div>
-                    </article>
-                    <article class="spec-item">
-                      <strong>显卡</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>型号</span><small>NVIDIA RTX 4080 Laptop</small></div>
-                        <div class="data-row"><span>显存</span><small>12 GB</small></div>
-                        <div class="data-row"><span>驱动版本</span><small>556.14</small></div>
-                        <div class="data-row"><span>温度</span><small>81°C</small></div>
-                      </div>
-                    </article>
-                    <article class="spec-item">
-                      <strong>硬盘</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>系统盘</span><small>Samsung 990 Pro 2TB</small></div>
-                        <div class="data-row"><span>健康状态</span><small>97%</small></div>
-                        <div class="data-row"><span>读写</span><small>6920 / 6410 MB/s</small></div>
-                        <div class="data-row"><span>剩余空间</span><small>186 GB</small></div>
-                      </div>
-                    </article>
-                    <article class="spec-item">
-                      <strong>显示与网络</strong>
-                      <div class="spec-columns">
-                        <div class="data-row"><span>显示器</span><small>16" 2560 x 1600 / 240 Hz</small></div>
-                        <div class="data-row"><span>网卡</span><small>Intel Wi-Fi 7 BE200</small></div>
-                        <div class="data-row"><span>IP 地址</span><small>10.14.22.108</small></div>
-                        <div class="data-row"><span>连接速率</span><small>2.4 Gbps</small></div>
-                      </div>
-                    </article>
-                  </div>
-                </section>
-              </div>
-            </section>
-
-            <section class="module-section" data-module="benchmark">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>性能评测页面同时承载整机跑分、分项跑分、AI 测试、压力测试与历史对比。</h2>
-                    <p>结果页强调总分、分项分、历史趋势与区间排行，适合后续扩展导出、对比与留档能力。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong>241.5 万</strong>
-                        <span>整机综合跑分</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>98.2%</strong>
-                        <span>同配置区间超越率</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>38 分钟</strong>
-                        <span>最近压力测试时长</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">最近评测时间</span>
-                      <span class="value">今天 08:36</span>
-                      <span class="delta positive">较上次 +3.4%</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="startBenchmark">开始评测</button>
-                      <button class="ghost-button" data-modal="pressure">压力测试</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="benchmark-grid">
-                  <article class="score-card">
-                    <span class="muted">CPU</span>
-                    <strong>93.8 万</strong>
-                    <div class="delta positive">超越 95% 设备</div>
-                  </article>
-                  <article class="score-card">
-                    <span class="muted">GPU / 3D</span>
-                    <strong>88.4 万</strong>
-                    <div class="delta warning">温度偏高</div>
-                  </article>
-                  <article class="score-card">
-                    <span class="muted">内存</span>
-                    <strong>31.2 万</strong>
-                    <div class="delta positive">带宽稳定</div>
-                  </article>
-                  <article class="score-card">
-                    <span class="muted">磁盘</span>
-                    <strong>28.1 万</strong>
-                    <div class="delta positive">表现优秀</div>
-                  </article>
-                </section>
-
-                <section class="grid-2">
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>分项得分对比</h3>
-                        <p>柱图用于展示单项得分与目标区间，便于识别短板。</p>
-                      </div>
-                      <button class="ghost-button">查看历史对比</button>
-                    </div>
-                    <div class="bar-chart">
-                      <div class="bar-row"><span>CPU</span><div class="bar-track"><div class="bar-fill" style="width: 92%;"></div></div><strong>92</strong></div>
-                      <div class="bar-row"><span>GPU</span><div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div><strong>88</strong></div>
-                      <div class="bar-row"><span>内存</span><div class="bar-track"><div class="bar-fill" style="width: 81%;"></div></div><strong>81</strong></div>
-                      <div class="bar-row"><span>磁盘</span><div class="bar-track"><div class="bar-fill" style="width: 77%;"></div></div><strong>77</strong></div>
-                      <div class="bar-row"><span>AI</span><div class="bar-track"><div class="bar-fill" style="width: 84%;"></div></div><strong>84</strong></div>
-                    </div>
-                  </article>
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>评测历史</h3>
-                        <p>保留历史记录、对比维度与导出入口。</p>
-                      </div>
-                    </div>
-                    <div class="timeline-list">
-                      <div class="timeline-item">
-                        <span class="type-badge">今天</span>
-                        <div><strong>综合得分 241.5 万</strong><span>CPU 高频稳定，GPU 温度仍需关注。</span></div>
-                        <button class="table-action">导出结果</button>
-                      </div>
-                      <div class="timeline-item">
-                        <span class="type-badge">6 月 12 日</span>
-                        <div><strong>综合得分 233.4 万</strong><span>新驱动安装前，磁盘表现略低于当前值。</span></div>
-                        <button class="table-action">对比详情</button>
-                      </div>
-                      <div class="timeline-item">
-                        <span class="type-badge">6 月 08 日</span>
-                        <div><strong>压力测试通过</strong><span>38 分钟满载未出现降频，平均温度 79°C。</span></div>
-                        <button class="table-action">查看报告</button>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-              </div>
-            </section>
-
-            <section class="module-section" data-module="monitor">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>实时监控页面用于承载温度、风扇、频率、占用率与阈值配置等高频交互。</h2>
-                    <p>本模块额外延伸到桌面侧边栏、监控面板、悬浮球与底部状态栏，满足“主界面外仍持续可见”的产品需求。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong>5 条</strong>
-                        <span>当前告警规则</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>3 秒</strong>
-                        <span>自动刷新频率</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>24 小时</strong>
-                        <span>监控历史保留</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">监控状态</span>
-                      <span class="value">运行中</span>
-                      <span class="delta positive">后台采集正常</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="openFloatingToggle">悬浮监控开关</button>
-                      <button class="ghost-button" data-modal="threshold">编辑阈值</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="panel chart-card">
-                  <div class="section-head">
-                    <div>
-                      <h3>实时曲线</h3>
-                      <p>折线图用于呈现 CPU、GPU、内存波动，并在阈值区间上方以浅色块提示风险。</p>
-                    </div>
-                    <div class="chart-key">
-                      <span><i class="cpu"></i>CPU</span>
-                      <span><i class="gpu"></i>GPU</span>
-                      <span><i class="memory"></i>内存</span>
-                    </div>
-                  </div>
-                  <div class="chart-shell">
-                    <div class="chart-header">
-                      <div>
-                        <div class="label">实时风险窗口</div>
-                        <strong id="liveAverage">61%</strong>
-                      </div>
-                      <div class="muted">高于阈值时触发弹窗与日志记录</div>
-                    </div>
-                    <svg class="monitor-svg" id="liveMonitorChart" viewBox="0 0 760 220"></svg>
-                  </div>
-                </section>
-
-                <section class="sensor-grid">
-                  <article class="sensor-card">
-                    <span class="muted">CPU 温度</span>
-                    <strong id="sensorCpuTemp">67°C</strong>
-                    <div class="delta warning">阈值 85°C</div>
-                  </article>
-                  <article class="sensor-card">
-                    <span class="muted">GPU 温度</span>
-                    <strong id="sensorGpuTemp">81°C</strong>
-                    <div class="delta warning">阈值 84°C</div>
-                  </article>
-                  <article class="sensor-card">
-                    <span class="muted">风扇转速</span>
-                    <strong id="sensorFan">3320 RPM</strong>
-                    <div class="delta positive">自动曲线已启用</div>
-                  </article>
-                </section>
-
-                <section class="dual-grid">
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>阈值配置表单</h3>
-                        <p>体现“字段、校验、提交逻辑”需求，保存后即时更新监控规则。</p>
-                      </div>
-                    </div>
-                    <form id="thresholdForm">
-                      <div class="form-grid">
-                        <div class="form-card">
-                          <label for="cpuThreshold">CPU 温度上限</label>
-                          <input id="cpuThreshold" name="cpuThreshold" type="number" min="50" max="100" value="85" />
-                        </div>
-                        <div class="form-card">
-                          <label for="gpuThreshold">GPU 温度上限</label>
-                          <input id="gpuThreshold" name="gpuThreshold" type="number" min="50" max="100" value="84" />
-                        </div>
-                        <div class="form-card">
-                          <label for="memoryThreshold">内存使用率告警值</label>
-                          <input id="memoryThreshold" name="memoryThreshold" type="number" min="30" max="99" value="88" />
-                        </div>
-                        <div class="form-card">
-                          <label for="refreshRate">刷新频率</label>
-                          <select id="refreshRate" name="refreshRate">
-                            <option value="3">3 秒</option>
-                            <option value="5">5 秒</option>
-                            <option value="10">10 秒</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="form-actions">
-                        <span class="hint-text" id="thresholdHint">保存后立即生效，并写入监控日志。</span>
-                        <button class="primary-button" type="submit">保存配置</button>
-                      </div>
-                    </form>
-                  </article>
-
-                  <article class="panel">
-                    <div class="section-head">
-                      <div>
-                        <h3>告警规则</h3>
-                        <p>展示规则状态、通知方式与责任动作。</p>
-                      </div>
-                    </div>
-                    <div class="rule-list">
-                      <div class="rule-item">
-                        <span class="status-badge danger">启用</span>
-                        <div><strong>GPU 高温预警</strong><span>超过 84°C 持续 3 分钟后弹窗，并允许一键降温。</span></div>
-                        <button class="table-action" data-modal="cooling">测试规则</button>
-                      </div>
-                      <div class="rule-item">
-                        <span class="status-badge warning">启用</span>
-                        <div><strong>内存告警</strong><span>使用率超过 88% 时记录日志并提示清理后台进程。</span></div>
-                        <button class="table-action">查看日志</button>
-                      </div>
-                      <div class="rule-item">
-                        <span class="status-badge normal">启用</span>
-                        <div><strong>磁盘空间低于 10%</strong><span>提醒执行专项清理并保留 7 天历史事件。</span></div>
-                        <button class="table-action" data-jump="cleanup">去处理</button>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-              </div>
-            </section>
-
-            <section class="module-section" data-module="cleanup">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>清理优化页覆盖垃圾扫描、系统瘦身、C 盘瘦身、重复文件与专项清理，并支持风险确认。</h2>
-                    <p>列表区展示可释放空间、风险等级、清理建议和操作按钮，配套筛选、分页、批量勾选与预计释放量汇总。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong id="cleanupSelectedSize">0 GB</strong>
-                        <span>已选预计释放量</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>12 类</strong>
-                        <span>可清理对象</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>需确认</strong>
-                        <span>深度清理 / 系统瘦身</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">最近一次释放空间</span>
-                      <span class="value">18.4 GB</span>
-                      <span class="delta positive">系统盘压力下降</span>
-                    </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="runCleanup">一键清理</button>
-                      <button class="ghost-button" data-modal="deep-clean">深度清理</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="panel table-layout cleanup-table">
-                  <div class="section-head">
-                    <div>
-                      <h3>清理对象列表</h3>
-                      <p>支持筛选、查询、分页、排序与批量勾选，执行前回显预计释放量。</p>
+                      <h3>主机监控</h3>
                     </div>
                   </div>
                   <div class="filter-bar">
                     <label class="search-field">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="m20 20-3.5-3.5"></path>
-                      </svg>
-                      <input id="cleanupSearch" placeholder="搜索清理项、路径或关键字" />
+                      <input id="hostSearch" placeholder="搜索主机名或 IP" />
                     </label>
                     <label class="field">
-                      <span class="muted">风险</span>
-                      <select id="cleanupRiskFilter">
-                        <option value="all">全部</option>
+                      <select id="hostOsFilter">
+                        <option value="all">全部系统</option>
+                        <option value="Windows 10">Windows 10</option>
+                        <option value="Windows 11">Windows 11</option>
+                        <option value="中标麒麟">中标麒麟</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="hostSort">
+                        <option value="cpu-desc">CPU 降序</option>
+                        <option value="memory-desc">内存降序</option>
+                        <option value="disk-desc">磁盘降序</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="hostPageSize">
+                        <option value="4">每页 4 条</option>
+                        <option value="6">每页 6 条</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="data-table host-table">
+                    <div class="table-head">
+                      <span>主机</span>
+                      <span>IP</span>
+                      <span>系统</span>
+                      <span>状态</span>
+                      <span>CPU</span>
+                      <span>内存</span>
+                      <span>磁盘</span>
+                      <span>预计可用</span>
+                      <span>操作</span>
+                    </div>
+                    <div id="hostRows"></div>
+                  </div>
+                  <div class="section-foot">
+                    <span class="status-note" id="hostSummary">共 0 条</span>
+                    <div class="pagination" id="hostPagination"></div>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section class="module-section" data-module="processes">
+              <div class="section-stack compact-stack">
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
+                    <div>
+                      <h3>进程分析</h3>
+                    </div>
+                  </div>
+                  <div class="filter-bar">
+                    <label class="search-field">
+                      <input id="processSearch" placeholder="搜索进程名或主机" />
+                    </label>
+                    <label class="field">
+                      <select id="processRiskFilter">
+                        <option value="all">全部风险</option>
                         <option value="high">高风险</option>
                         <option value="medium">中风险</option>
                         <option value="low">低风险</option>
                       </select>
                     </label>
                     <label class="field">
-                      <span class="muted">类型</span>
-                      <select id="cleanupTypeFilter">
-                        <option value="all">全部</option>
-                        <option value="垃圾清理">垃圾清理</option>
-                        <option value="系统瘦身">系统瘦身</option>
-                        <option value="专项清理">专项清理</option>
+                      <select id="processWhiteFilter">
+                        <option value="all">全部白名单状态</option>
+                        <option value="hit">仅白名单</option>
+                        <option value="miss">仅非白名单</option>
                       </select>
                     </label>
                     <label class="field">
-                      <span class="muted">排序</span>
-                      <select id="cleanupSort">
-                        <option value="size-desc">按空间从大到小</option>
-                        <option value="size-asc">按空间从小到大</option>
-                        <option value="risk-desc">按风险优先级</option>
-                        <option value="name-asc">按名称</option>
+                      <select id="processSort">
+                        <option value="cpu-desc">CPU 降序</option>
+                        <option value="memory-desc">内存降序</option>
+                        <option value="duration-desc">时长降序</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="processPageSize">
+                        <option value="4">每页 4 条</option>
+                        <option value="6">每页 6 条</option>
                       </select>
                     </label>
                   </div>
-
-                  <div class="data-table">
+                  <div class="data-table process-table">
                     <div class="table-head">
-                      <span><input class="check" id="cleanupCheckAll" type="checkbox" /></span>
-                      <span>清理对象</span>
-                      <span>类型</span>
-                      <span>风险</span>
-                      <span>预计释放</span>
-                      <span>说明</span>
-                      <span>动作</span>
+                      <span>进程</span>
+                      <span>主机</span>
+                      <span>CPU</span>
+                      <span>内存</span>
+                      <span>持续时长</span>
+                      <span>白名单</span>
+                      <span>操作</span>
                     </div>
-                    <div id="cleanupRows"></div>
+                    <div id="processRows"></div>
                   </div>
-
                   <div class="section-foot">
-                    <div class="footer-note" id="cleanupSummary">共 0 项，当前第 1 页</div>
-                    <div class="pagination" id="cleanupPagination"></div>
+                    <span class="status-note" id="processSummary">共 0 条</span>
+                    <div class="pagination" id="processPagination"></div>
                   </div>
                 </section>
               </div>
             </section>
 
-            <section class="module-section" data-module="driver">
-              <div class="section-stack">
-                <section class="hero-panel">
-                  <div class="hero-copy">
-                    <h2>驱动管理页面负责识别缺失、过旧、异常驱动，并串联批量安装、进度展示与重启提醒。</h2>
-                    <p>该模块强调查询、筛选、排序、分页、批量执行与权限拦截，适合作为后台安装与结果回写的前端容器。</p>
-                    <div class="hero-stats">
-                      <div class="stat-chip">
-                        <strong>4 项</strong>
-                        <span>推荐更新</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>1 项</strong>
-                        <span>异常驱动</span>
-                      </div>
-                      <div class="stat-chip">
-                        <strong>2 项</strong>
-                        <span>安装后需重启</span>
-                      </div>
+            <section class="module-section" data-module="disks">
+              <div class="section-stack compact-stack">
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
+                    <div>
+                      <h3>磁盘趋势</h3>
                     </div>
                   </div>
-                  <div class="hero-side">
-                    <div class="mini-card">
-                      <span class="label">最后扫描时间</span>
-                      <span class="value">今天 10:06</span>
-                      <span class="delta warning">2 项待确认</span>
+                  <div class="filter-bar">
+                    <label class="field">
+                      <select id="diskHostFilter">
+                        <option value="all">全部主机</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="diskRiskFilter">
+                        <option value="all">全部风险</option>
+                        <option value="high">高风险</option>
+                        <option value="medium">中风险</option>
+                        <option value="low">低风险</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="diskSort">
+                        <option value="days-asc">预计可用时长</option>
+                        <option value="usage-desc">磁盘使用率</option>
+                        <option value="growth-desc">增长速度</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="diskPageSize">
+                        <option value="4">每页 4 条</option>
+                        <option value="6">每页 6 条</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="data-table disk-table">
+                    <div class="table-head">
+                      <span>分区</span>
+                      <span>主机</span>
+                      <span>使用率</span>
+                      <span>剩余空间</span>
+                      <span>增长速度</span>
+                      <span>预计可用</span>
+                      <span>操作</span>
                     </div>
-                    <div class="row-actions">
-                      <button class="primary-button" id="scanDrivers">扫描驱动</button>
-                      <button class="ghost-button" id="installAllDrivers">一键安装</button>
-                    </div>
+                    <div id="diskRows"></div>
+                  </div>
+                  <div class="section-foot">
+                    <span class="status-note" id="diskSummary">共 0 条</span>
+                    <div class="pagination" id="diskPagination"></div>
                   </div>
                 </section>
+              </div>
+            </section>
 
-                <section class="panel table-layout driver-table">
-                  <div class="section-head">
+            <section class="module-section" data-module="alerts">
+              <div class="section-stack compact-stack">
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
                     <div>
-                      <h3>驱动列表</h3>
-                      <p>支持关键字查询、状态筛选、时间排序、批量安装与失败重试。</p>
+                      <h3>告警中心</h3>
                     </div>
                   </div>
                   <div class="filter-bar">
                     <label class="search-field">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="m20 20-3.5-3.5"></path>
-                      </svg>
-                      <input id="driverSearch" placeholder="搜索驱动名称、厂商或版本" />
+                      <input id="alertSearch" placeholder="搜索主机或告警类型" />
                     </label>
                     <label class="field">
-                      <span class="muted">状态</span>
-                      <select id="driverStatusFilter">
-                        <option value="all">全部</option>
-                        <option value="推荐更新">推荐更新</option>
-                        <option value="异常">异常</option>
-                        <option value="已安装">已安装</option>
+                      <select id="alertStatusFilter">
+                        <option value="all">全部状态</option>
+                        <option value="未处理">未处理</option>
+                        <option value="已确认">已确认</option>
+                        <option value="已忽略">已忽略</option>
+                        <option value="已关闭">已关闭</option>
                       </select>
                     </label>
                     <label class="field">
-                      <span class="muted">排序</span>
-                      <select id="driverSort">
-                        <option value="priority-desc">按优先级</option>
-                        <option value="date-desc">按发布日期</option>
-                        <option value="name-asc">按名称</option>
+                      <select id="alertRiskFilter">
+                        <option value="all">全部风险</option>
+                        <option value="high">高风险</option>
+                        <option value="medium">中风险</option>
+                        <option value="low">低风险</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <select id="alertPageSize">
+                        <option value="4">每页 4 条</option>
+                        <option value="6">每页 6 条</option>
                       </select>
                     </label>
                   </div>
-
-                  <div class="data-table">
+                  <div class="data-table alert-table">
                     <div class="table-head">
-                      <span>驱动名称</span>
-                      <span>当前版本</span>
-                      <span>推荐版本</span>
-                      <span>厂商</span>
-                      <span>发布日期</span>
+                      <span>时间</span>
+                      <span>主机</span>
+                      <span>类型</span>
+                      <span>风险</span>
                       <span>状态</span>
-                      <span>动作</span>
+                      <span>操作</span>
                     </div>
-                    <div id="driverRows"></div>
+                    <div id="alertRows"></div>
                   </div>
-
                   <div class="section-foot">
-                    <div class="footer-note" id="driverSummary">共 0 项，当前第 1 页</div>
-                    <div class="pagination" id="driverPagination"></div>
+                    <span class="status-note" id="alertSummary">共 0 条</span>
+                    <div class="pagination" id="alertPagination"></div>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section class="module-section" data-module="settings">
+              <div class="section-stack compact-stack">
+                <section class="grid-2 compact-grid">
+                  <article class="panel">
+                    <div class="section-head compact-head">
+                      <div>
+                        <h3>阈值配置</h3>
+                      </div>
+                    </div>
+                    <form id="thresholdForm">
+                      <div class="form-grid">
+                        <div class="form-card">
+                          <label for="cpuThreshold">CPU 阈值 (%)</label>
+                          <input id="cpuThreshold" name="cpuThreshold" type="number" min="50" max="95" value="82" />
+                        </div>
+                        <div class="form-card">
+                          <label for="memoryThreshold">内存阈值 (%)</label>
+                          <input id="memoryThreshold" name="memoryThreshold" type="number" min="60" max="95" value="85" />
+                        </div>
+                        <div class="form-card">
+                          <label for="diskThreshold">磁盘阈值 (%)</label>
+                          <input id="diskThreshold" name="diskThreshold" type="number" min="70" max="95" value="88" />
+                        </div>
+                        <div class="form-card">
+                          <label for="durationThreshold">持续时长阈值 (分钟)</label>
+                          <input id="durationThreshold" name="durationThreshold" type="number" min="1" value="10" />
+                        </div>
+                      </div>
+                      <div class="form-actions">
+                        <span class="hint-text" id="thresholdHint">保存后即时生效</span>
+                        <button class="primary-button" type="submit">保存</button>
+                      </div>
+                    </form>
+                  </article>
+
+                  <article class="panel">
+                    <div class="section-head compact-head">
+                      <div>
+                        <h3>白名单配置</h3>
+                      </div>
+                    </div>
+                    <form id="whitelistForm">
+                      <div class="form-grid">
+                        <div class="form-card">
+                          <label for="processName">进程名称</label>
+                          <input id="processName" name="processName" placeholder="进程名称" />
+                        </div>
+                        <div class="form-card">
+                          <label for="processPath">路径</label>
+                          <input id="processPath" name="processPath" placeholder="绝对路径" />
+                        </div>
+                        <div class="form-card">
+                          <label for="hostType">主机类型</label>
+                          <select id="hostType" name="hostType">
+                            <option value="Windows 10">Windows 10</option>
+                            <option value="Windows 11">Windows 11</option>
+                            <option value="中标麒麟">中标麒麟</option>
+                          </select>
+                        </div>
+                        <div class="form-card">
+                          <label for="protectionLevel">保护级别</label>
+                          <select id="protectionLevel" name="protectionLevel">
+                            <option value="关键业务">关键业务</option>
+                            <option value="系统核心">系统核心</option>
+                            <option value="人工观察">人工观察</option>
+                          </select>
+                        </div>
+                        <div class="form-card form-card-wide">
+                          <label for="whiteRemark">备注</label>
+                          <input id="whiteRemark" name="whiteRemark" placeholder="备注" />
+                        </div>
+                      </div>
+                      <div class="form-actions">
+                        <span class="hint-text" id="whitelistHint">保存后立即生效</span>
+                        <button class="primary-button" type="submit">保存</button>
+                      </div>
+                    </form>
+                  </article>
+                </section>
+
+                <section class="panel table-layout">
+                  <div class="section-head compact-head">
+                    <div>
+                      <h3>白名单列表</h3>
+                    </div>
+                  </div>
+                  <div class="data-table whitelist-table">
+                    <div class="table-head">
+                      <span>进程名称</span>
+                      <span>路径</span>
+                      <span>主机类型</span>
+                      <span>保护级别</span>
+                      <span>备注</span>
+                    </div>
+                    <div id="whitelistRows"></div>
                   </div>
                 </section>
               </div>
             </section>
           </main>
-
-          <aside class="rail">
-            <section class="rail-panel">
-              <h3>系统态势</h3>
-              <div class="state-score">
-                <div class="score-ring">92</div>
-                <div class="state-matrix">
-                  <div class="state-box">
-                    <span class="muted">健康评分</span>
-                    <strong>92</strong>
-                  </div>
-                  <div class="state-box">
-                    <span class="muted">在线模块</span>
-                    <strong>7 / 7</strong>
-                  </div>
-                  <div class="state-box">
-                    <span class="muted">待处理</span>
-                    <strong>4</strong>
-                  </div>
-                  <div class="state-box">
-                    <span class="muted">已忽略</span>
-                    <strong>1</strong>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="rail-panel">
-              <h3>执行队列</h3>
-              <div class="queue-list" id="queueList">
-                <div class="queue-item">
-                  <span class="status-badge warning">排队中</span>
-                  <div><strong>驱动兼容补丁</strong><span>等待管理员确认后执行</span></div>
-                  <span>10:08</span>
-                </div>
-                <div class="queue-item">
-                  <span class="status-badge normal">已完成</span>
-                  <div><strong>临时文件清理</strong><span>已释放 4.8 GB 空间</span></div>
-                  <span>09:54</span>
-                </div>
-                <div class="queue-item">
-                  <span class="status-badge danger">告警</span>
-                  <div><strong>GPU 高温事件</strong><span>已触发弹窗并记录 2 条日志</span></div>
-                  <span>09:41</span>
-                </div>
-              </div>
-            </section>
-
-            <section class="rail-panel">
-              <h3>权限与角色</h3>
-              <div class="timeline-list">
-                <div class="timeline-item">
-                  <span class="role-badge">管理员</span>
-                  <div><strong>系统级变更已开放</strong><span>允许驱动安装、深度清理、启动项管理。</span></div>
-                  <button class="table-action" data-modal="permission">查看策略</button>
-                </div>
-                <div class="timeline-item">
-                  <span class="role-badge">高级权限</span>
-                  <div><strong>长期趋势分析可用</strong><span>监控历史保留 24 小时，可扩展至长期档案。</span></div>
-                  <button class="table-action">查看权益</button>
-                </div>
-              </div>
-            </section>
-          </aside>
         </div>
       </div>
     </div>
@@ -1008,22 +503,20 @@
       </div>
     </section>
 
-    <section class="bottom-bar">
+    <section class="bottom-bar compact-bottom-bar">
       <div class="bottom-metrics">
-        <div class="bottom-chip"><span class="bottom-dot cpu"></span><span>CPU <strong id="bottomCpu">42%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot gpu"></span><span>GPU <strong id="bottomGpu">68%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot mem"></span><span>内存 <strong id="bottomMemory">63%</strong></span></div>
-        <div class="bottom-chip"><span class="bottom-dot disk"></span><span>磁盘 <strong id="bottomDisk">91%</strong></span></div>
+        <div class="bottom-chip"><span class="bottom-dot cpu"></span><span>CPU <strong id="bottomCpu">0%</strong></span></div>
+        <div class="bottom-chip"><span class="bottom-dot mem"></span><span>内存 <strong id="bottomMemory">0%</strong></span></div>
+        <div class="bottom-chip"><span class="bottom-dot disk"></span><span>磁盘 <strong id="bottomDisk">0%</strong></span></div>
+        <div class="bottom-chip"><span class="bottom-dot alert"></span><span>预计可用 <strong id="bottomDays">0 天</strong></span></div>
       </div>
-      <div class="footer-note">后台监控已开启 · 关闭主窗口后是否继续运行由设置决定</div>
     </section>
 
     <div class="drawer-overlay" id="detailDrawerOverlay">
       <aside class="drawer">
-        <div class="section-head">
+        <div class="section-head compact-head">
           <div>
-            <h3 id="detailTitle">问题详情</h3>
-            <p id="detailDescription">查看问题说明、建议动作、影响范围与日志记录。</p>
+            <h3 id="detailTitle">详情</h3>
           </div>
           <button class="icon-button" id="closeDrawer" aria-label="关闭详情">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1032,31 +525,31 @@
           </button>
         </div>
         <div class="drawer-block">
-          <strong>影响范围</strong>
-          <p id="detailScope">核心负载区、显卡散热策略、性能稳定性。</p>
+          <strong>摘要</strong>
+          <p id="detailDescription">-</p>
+        </div>
+        <div class="drawer-block">
+          <strong>当前状态</strong>
+          <p id="detailScope">-</p>
         </div>
         <div class="drawer-block">
           <strong>建议动作</strong>
-          <p id="detailAction">开启一键降温，降低高负载任务并检查风扇曲线。</p>
-        </div>
-        <div class="drawer-block">
-          <strong>相关日志</strong>
-          <p id="detailLogs">09:41 首次告警，09:44 温度达到峰值 84°C，09:46 自动降至 80°C。</p>
+          <p id="detailAction">-</p>
         </div>
       </aside>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
       <section class="modal-card">
-        <h3 id="modalTitle">高风险操作确认</h3>
-        <p id="modalDescription">当前操作可能影响驱动、系统缓存或后台采集策略，继续前需要确认风险说明。</p>
+        <h3 id="modalTitle">确认操作</h3>
+        <p id="modalDescription">继续执行当前操作。</p>
         <label class="modal-check">
           <input type="checkbox" id="modalConsent" />
-          <span>我已知晓风险并允许继续执行</span>
+          <span>我已确认</span>
         </label>
         <div class="modal-actions">
           <button class="ghost-button" id="cancelModal">取消</button>
-          <button class="primary-button" id="confirmModal">继续执行</button>
+          <button class="primary-button" id="confirmModal">继续</button>
         </div>
       </section>
     </div>

@@ -1,848 +1,1044 @@
+const moduleMeta = {
+  overview: { title: "总览首页", subtitle: "CPU、内存、磁盘、预计可用时长" },
+  hosts: { title: "主机监控", subtitle: "主机列表" },
+  processes: { title: "进程分析", subtitle: "高占用进程" },
+  disks: { title: "磁盘趋势", subtitle: "磁盘空间与预计可用时长" },
+  alerts: { title: "告警中心", subtitle: "告警状态处理" },
+  settings: { title: "系统设置", subtitle: "阈值与白名单" }
+};
 
-      const moduleMeta = {
-        overview: {
-          title: "设备总览",
-          subtitle: "集中查看 CPU、内存、日志缓存、驱动状态与待处理风险，并可从概览快速进入体检、清理、评测与实时监控链路。"
-        },
-        health: {
-          title: "硬件体检",
-          subtitle: "以一键体检、风险摘要、处理建议、立即修复、忽略本项与复检能力为核心，承载扫描类交互。"
-        },
-        hardware: {
-          title: "硬件参数 / 检测",
-          subtitle: "用于展示完整硬件识别结果，支持复制摘要、分类查看与导出完整报告。"
-        },
-        benchmark: {
-          title: "硬件评测",
-          subtitle: "承载整机跑分、分项跑分、AI 测试、压力测试与历史对比，突出结果回显与导出能力。"
-        },
-        monitor: {
-          title: "硬件防护 / 监控",
-          subtitle: "负责实时温度、风扇转速、频率 / 占用率与阈值规则配置，并联动悬浮监控与底部状态栏。"
-        },
-        cleanup: {
-          title: "清理优化",
-          subtitle: "支持垃圾清理、系统瘦身、C 盘瘦身、重复文件、专项清理与批量执行交互。"
-        },
-        driver: {
-          title: "驱动检测 / 管理",
-          subtitle: "识别缺失、异常与推荐更新的驱动，并完成筛选、排序、安装、重试与结果记录。"
-        }
-      };
+const riskWeight = { high: 3, medium: 2, low: 1 };
 
-      const detailMap = {
-        "gpu-heat": {
-          title: "GPU 高温告警",
-          description: "图形核心在连续渲染场景下高于阈值，触发了监控规则中的高风险告警。",
-          scope: "影响显卡核心区、性能稳定性与后续压力测试结果，长期持续会增加降频概率。",
-          action: "建议先执行一键降温，再检查风扇曲线、后台高负载进程以及环境散热情况。",
-          logs: "09:41 首次告警，09:43 GPU 占用 96%，09:44 温度 84°C，09:46 回落至 80°C。"
-        }
-      };
+let hosts = [
+  {
+    id: "host-01",
+    name: "SCADA-APP-01",
+    ip: "10.10.2.14",
+    os: "Windows 10",
+    status: "异常",
+    baseCpu: 72,
+    baseMemory: 68,
+    baseDisk: 81,
+    cpu: 72,
+    memory: 68,
+    disk: 81,
+    daysLeft: 12,
+    temp: 67,
+    partitions: [
+      { id: "disk-01", name: "C:", freeText: "142 GB", growth: 5.2, risk: "medium", usedBase: 81, used: 81, daysLeft: 22, logDir: "C:\\DCS\\logs" },
+      { id: "disk-02", name: "D:", freeText: "89 GB", growth: 7.4, risk: "high", usedBase: 86, used: 86, daysLeft: 12, logDir: "D:\\DCS\\history" }
+    ]
+  },
+  {
+    id: "host-02",
+    name: "HIST-DB-01",
+    ip: "10.10.2.31",
+    os: "Windows 11",
+    status: "在线",
+    baseCpu: 58,
+    baseMemory: 76,
+    baseDisk: 88,
+    cpu: 58,
+    memory: 76,
+    disk: 88,
+    daysLeft: 7,
+    temp: 63,
+    partitions: [
+      { id: "disk-03", name: "E:", freeText: "64 GB", growth: 8.9, risk: "high", usedBase: 88, used: 88, daysLeft: 7, logDir: "E:\\archive\\log" }
+    ]
+  },
+  {
+    id: "host-03",
+    name: "KYLIN-COLLECT-01",
+    ip: "10.10.8.18",
+    os: "中标麒麟",
+    status: "在线",
+    baseCpu: 49,
+    baseMemory: 54,
+    baseDisk: 63,
+    cpu: 49,
+    memory: 54,
+    disk: 63,
+    daysLeft: 39,
+    temp: 56,
+    partitions: [
+      { id: "disk-04", name: "/var", freeText: "208 GB", growth: 2.6, risk: "medium", usedBase: 63, used: 63, daysLeft: 39, logDir: "/var/log/dcs" }
+    ]
+  },
+  {
+    id: "host-04",
+    name: "BATCH-TASK-02",
+    ip: "10.10.5.42",
+    os: "Windows 10",
+    status: "在线",
+    baseCpu: 66,
+    baseMemory: 61,
+    baseDisk: 73,
+    cpu: 66,
+    memory: 61,
+    disk: 73,
+    daysLeft: 23,
+    temp: 61,
+    partitions: [
+      { id: "disk-05", name: "G:", freeText: "268 GB", growth: 2.2, risk: "low", usedBase: 59, used: 59, daysLeft: 48, logDir: "G:\\archive" }
+    ]
+  },
+  {
+    id: "host-05",
+    name: "ARCHIVE-NODE-01",
+    ip: "10.10.6.55",
+    os: "Windows 11",
+    status: "离线",
+    baseCpu: 18,
+    baseMemory: 44,
+    baseDisk: 52,
+    cpu: 18,
+    memory: 44,
+    disk: 52,
+    daysLeft: 95,
+    temp: 44,
+    partitions: [
+      { id: "disk-06", name: "H:", freeText: "441 GB", growth: 0.8, risk: "low", usedBase: 52, used: 52, daysLeft: 95, logDir: "H:\\archive\\log" }
+    ]
+  }
+];
 
-      const modalContent = {
-        cooling: {
-          title: "一键降温确认",
-          description: "将临时降低高负载策略、提高风扇曲线并记录一次系统级调整日志。"
-        },
-        "deep-clean": {
-          title: "深度清理确认",
-          description: "深度清理会触达系统缓存、旧日志与部分可恢复文件，建议在低峰时段执行。"
-        },
-        export: {
-          title: "导出报告确认",
-          description: "将根据当前页面与筛选条件导出报告，支持 TXT、CSV、Excel 与 PDF 格式。"
-        },
-        pressure: {
-          title: "压力测试确认",
-          description: "压力测试将持续拉高 CPU 与 GPU 负载，并在过程中记录温度、频率与降频事件。"
-        },
-        threshold: {
-          title: "阈值变更确认",
-          description: "保存后新的阈值将立即生效，并影响悬浮面板、底部状态栏与告警规则判断。"
-        },
-        permission: {
-          title: "权限策略说明",
-          description: "管理员可执行驱动安装、系统级清理、启动项管理与底层监控配置，所有关键动作都将写入日志。"
-        }
-      };
+let processes = [
+  { id: "proc-01", name: "historiansvc.exe", hostId: "host-01", cpu: 43, memory: 3.8, durationMinutes: 46, risk: "high", whitelisted: true },
+  { id: "proc-02", name: "compress-archive.exe", hostId: "host-02", cpu: 36, memory: 2.6, durationMinutes: 19, risk: "medium", whitelisted: false },
+  { id: "proc-03", name: "dcslogd", hostId: "host-03", cpu: 27, memory: 1.4, durationMinutes: 72, risk: "medium", whitelisted: true },
+  { id: "proc-04", name: "temp-cleaner.exe", hostId: "host-04", cpu: 18, memory: 1.1, durationMinutes: 12, risk: "low", whitelisted: false },
+  { id: "proc-05", name: "oracle.exe", hostId: "host-02", cpu: 31, memory: 5.7, durationMinutes: 58, risk: "high", whitelisted: true }
+];
 
-      const cleanupData = [
-        { id: 1, name: "系统临时文件", type: "垃圾清理", risk: "low", size: 3.6, description: "来自更新缓存与安装临时目录", action: "一键清理" },
-        { id: 2, name: "日志缓存目录", type: "专项清理", risk: "medium", size: 4.8, description: "可按时间保留近 7 天日志", action: "清理并归档" },
-        { id: 3, name: "浏览器缓存", type: "垃圾清理", risk: "low", size: 1.9, description: "释放浏览器缓存与缩略图文件", action: "清理" },
-        { id: 4, name: "旧驱动安装包", type: "系统瘦身", risk: "medium", size: 2.4, description: "建议保留最近 1 个版本回退包", action: "清理" },
-        { id: 5, name: "重复媒体素材", type: "专项清理", risk: "low", size: 6.2, description: "重复文件共 218 个，可逐项查看", action: "查看并处理" },
-        { id: 6, name: "Windows 更新备份", type: "系统瘦身", risk: "high", size: 8.1, description: "删除后将影响旧版本回滚", action: "高风险清理" },
-        { id: 7, name: "聊天应用专清", type: "专项清理", risk: "medium", size: 2.9, description: "包含图片、视频与临时附件缓存", action: "专项清理" },
-        { id: 8, name: "缩略图数据库", type: "垃圾清理", risk: "low", size: 0.8, description: "可自动重建，对业务无影响", action: "清理" }
-      ];
+let alerts = [
+  { id: "alert-01", time: "10:32", hostId: "host-01", type: "CPU 持续高占用", severity: "high", status: "未处理" },
+  { id: "alert-02", time: "10:28", hostId: "host-02", type: "磁盘增长过快", severity: "high", status: "已确认" },
+  { id: "alert-03", time: "10:21", hostId: "host-03", type: "日志目录增长", severity: "medium", status: "未处理" },
+  { id: "alert-04", time: "10:18", hostId: "host-04", type: "内存偏高", severity: "medium", status: "已忽略" }
+];
 
-      const driverData = [
-        { id: 1, name: "NVIDIA 显卡驱动", current: "551.12", target: "556.14", vendor: "NVIDIA", date: "2026-06-11", status: "推荐更新", priority: 3 },
-        { id: 2, name: "Realtek 音频驱动", current: "6.0.9488", target: "6.0.9534", vendor: "Realtek", date: "2026-06-10", status: "推荐更新", priority: 2 },
-        { id: 3, name: "Intel 无线网卡驱动", current: "23.0.8", target: "23.0.8", vendor: "Intel", date: "2026-05-28", status: "已安装", priority: 1 },
-        { id: 4, name: "蓝牙适配器驱动", current: "11.0.4", target: "11.1.0", vendor: "Intel", date: "2026-06-03", status: "推荐更新", priority: 2 },
-        { id: 5, name: "芯片组补丁包", current: "9.4.1", target: "9.5.0", vendor: "Intel", date: "2026-06-12", status: "异常", priority: 4 },
-        { id: 6, name: "触控板驱动", current: "5.1.0", target: "5.1.2", vendor: "ELAN", date: "2026-06-01", status: "推荐更新", priority: 2 }
-      ];
+let whitelistEntries = [
+  { id: "white-01", processName: "historiansvc.exe", path: "C:\\DCS\\bin\\historiansvc.exe", hostType: "Windows 10", protectionLevel: "关键业务", remark: "历史采集" },
+  { id: "white-02", processName: "dcslogd", path: "/usr/local/dcs/bin/dcslogd", hostType: "中标麒麟", protectionLevel: "系统核心", remark: "日志采集" }
+];
 
-      const cleanupState = {
-        page: 1,
-        pageSize: 4,
-        search: "",
-        risk: "all",
-        type: "all",
-        sort: "size-desc",
-        selected: new Set()
-      };
+const thresholdConfig = {
+  cpuThreshold: 82,
+  memoryThreshold: 85,
+  diskThreshold: 88,
+  durationThreshold: 10
+};
 
-      const driverState = {
-        page: 1,
-        pageSize: 4,
-        search: "",
-        status: "all",
-        sort: "priority-desc"
-      };
+const hostState = { page: 1, pageSize: 4, search: "", os: "all", sort: "cpu-desc" };
+const processState = { page: 1, pageSize: 4, search: "", risk: "all", whitelist: "all", sort: "cpu-desc" };
+const diskState = { page: 1, pageSize: 4, hostId: "all", risk: "all", sort: "days-asc" };
+const alertState = { page: 1, pageSize: 4, search: "", status: "all", risk: "all" };
 
-      const queueItems = [];
-      let pendingModalKey = "";
-      let healthScanTimer = null;
-      let healthProgress = 0;
-      let floatingVisible = true;
-      let monitorSeed = 0;
-      const floatingDigitMap = {
-        0: ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
-        1: ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
-        2: ["01110", "10001", "00001", "00110", "01000", "10000", "11111"],
-        3: ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
-        4: ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
-        5: ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
-        6: ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
-        7: ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
-        8: ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
-        9: ["01110", "10001", "10001", "01111", "00001", "00010", "11100"]
-      };
-      const floatingMotion = {
-        currentX: 0,
-        currentY: 0,
-        targetX: 0,
-        targetY: 0
-      };
-      const floatingDrag = {
-        active: false,
-        offsetX: 0,
-        offsetY: 0,
-        initialized: false
-      };
+let pendingAction = null;
+let liveTick = 0;
 
-      const navButtons = Array.from(document.querySelectorAll(".nav-item"));
-      const sections = Array.from(document.querySelectorAll(".module-section"));
-      const pageTitle = document.getElementById("pageTitle");
-      const pageSubtitle = document.getElementById("pageSubtitle");
-      const modalOverlay = document.getElementById("modalOverlay");
-      const modalTitle = document.getElementById("modalTitle");
-      const modalDescription = document.getElementById("modalDescription");
-      const modalConsent = document.getElementById("modalConsent");
-      const detailDrawerOverlay = document.getElementById("detailDrawerOverlay");
-      const toastStack = document.getElementById("toastStack");
-      const floatingWidget = document.getElementById("floatingWidget");
-      const floatingOrb = document.getElementById("floatingOrb");
-      const floatingDigitBoard = document.getElementById("floatingDigitBoard");
-      const floatingTempReadout = document.getElementById("floatingTempReadout");
+const floatingDigitMap = {
+  0: ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+  1: ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+  2: ["01110", "10001", "00001", "00110", "01000", "10000", "11111"],
+  3: ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+  4: ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+  5: ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+  6: ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
+  7: ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  8: ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  9: ["01110", "10001", "10001", "01111", "00001", "00010", "11100"]
+};
 
-      function clamp(value, min, max) {
-        return Math.min(Math.max(value, min), max);
-      }
+const floatingMotion = { currentX: 0, currentY: 0, targetX: 0, targetY: 0 };
+const floatingDrag = { active: false, offsetX: 0, offsetY: 0, initialized: false };
 
-      function isFloatingInline() {
-        return window.matchMedia("(max-width: 820px)").matches;
-      }
+const navButtons = Array.from(document.querySelectorAll(".nav-item"));
+const sections = Array.from(document.querySelectorAll(".module-section"));
+const pageTitle = document.getElementById("pageTitle");
+const pageSubtitle = document.getElementById("pageSubtitle");
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalDescription = document.getElementById("modalDescription");
+const modalConsent = document.getElementById("modalConsent");
+const detailDrawerOverlay = document.getElementById("detailDrawerOverlay");
+const toastStack = document.getElementById("toastStack");
+const floatingWidget = document.getElementById("floatingWidget");
+const floatingOrb = document.getElementById("floatingOrb");
+const floatingDigitBoard = document.getElementById("floatingDigitBoard");
+const floatingTempReadout = document.getElementById("floatingTempReadout");
 
-      function renderFloatingDigits(value) {
-        const valueText = String(clamp(value, 0, 30)).padStart(2, "0");
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
-        floatingDigitBoard.replaceChildren(
-          ...valueText.split("").map((char) => {
-            const digit = document.createElement("div");
-            digit.className = "floating-digit";
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
 
-            floatingDigitMap[char].forEach((row) => {
-              row.split("").forEach((cell) => {
-                const pixel = document.createElement("span");
-                pixel.className = cell === "1" ? "floating-pixel on" : "floating-pixel";
-                digit.appendChild(pixel);
-              });
-            });
+function nowTime() {
+  return new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
 
-            return digit;
-          })
-        );
-      }
+function isFloatingInline() {
+  return window.matchMedia("(max-width: 820px)").matches;
+}
 
-      function calculateRemainingDays(temp) {
-        return clamp(Math.round(20 - (temp - 55) * 0.8 + Math.cos(monitorSeed / 2.8) * 2), 0, 30);
-      }
-
-      function updateFloatingDisplay(daysLeft, temp) {
-        renderFloatingDigits(daysLeft);
-        floatingDigitBoard.classList.toggle("danger", daysLeft < 7);
-        floatingTempReadout.textContent = `${temp}°C`;
-        floatingTempReadout.classList.toggle("danger", temp > 65);
-        floatingWidget.setAttribute("aria-label", `悬浮监控球，剩余天数 ${daysLeft} 天，当前核心温度 ${temp} 摄氏度`);
-      }
-
-      function resetFloatingTilt() {
-        floatingMotion.targetX = 0;
-        floatingMotion.targetY = 0;
-      }
-
-      function updateFloatingTilt(clientX, clientY) {
-        const rect = floatingOrb.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const normalizedX = clamp((clientX - centerX) / (rect.width * 0.62), -1, 1);
-        const normalizedY = clamp((clientY - centerY) / (rect.height * 0.62), -1, 1);
-
-        floatingMotion.targetY = normalizedX * 14;
-        floatingMotion.targetX = -normalizedY * 14;
-      }
-
-      function renderFloatingOrb() {
-        floatingMotion.currentX += (floatingMotion.targetX - floatingMotion.currentX) * 0.18;
-        floatingMotion.currentY += (floatingMotion.targetY - floatingMotion.currentY) * 0.18;
-
-        floatingWidget.style.setProperty("--rotate-x", `${floatingMotion.currentX.toFixed(2)}deg`);
-        floatingWidget.style.setProperty("--rotate-y", `${floatingMotion.currentY.toFixed(2)}deg`);
-        floatingWidget.style.setProperty("--shadow-x", `${(-floatingMotion.currentY * 1.05).toFixed(2)}px`);
-        floatingWidget.style.setProperty("--shadow-scale", `${(1 - Math.abs(floatingMotion.currentY) * 0.01).toFixed(3)}`);
-        floatingWidget.style.setProperty("--glow-x", `${clamp(50 - floatingMotion.currentY * 0.75, 40, 60).toFixed(2)}%`);
-        floatingWidget.style.setProperty("--glow-y", `${clamp(22 + floatingMotion.currentX * 0.6, 15, 31).toFixed(2)}%`);
-        floatingWidget.style.setProperty("--display-shift-x", `${(floatingMotion.currentY * 0.65).toFixed(2)}px`);
-        floatingWidget.style.setProperty("--display-shift-y", `${(-floatingMotion.currentX * 0.5).toFixed(2)}px`);
-
-        requestAnimationFrame(renderFloatingOrb);
-      }
-
-      function positionFloatingWidget(x, y) {
-        const rect = floatingWidget.getBoundingClientRect();
-        const maxX = Math.max(16, window.innerWidth - rect.width - 16);
-        const maxY = Math.max(16, window.innerHeight - rect.height - 16);
-        floatingWidget.style.left = `${clamp(x, 16, maxX)}px`;
-        floatingWidget.style.top = `${clamp(y, 16, maxY)}px`;
-      }
-
-      function syncFloatingWidgetPosition(forceReset = false) {
-        if (isFloatingInline()) {
-          floatingWidget.style.removeProperty("left");
-          floatingWidget.style.removeProperty("top");
-          floatingDrag.initialized = false;
-          return;
-        }
-
-        if (forceReset || !floatingDrag.initialized) {
-          positionFloatingWidget(window.innerWidth - 148, window.innerHeight - 164);
-          floatingDrag.initialized = true;
-          return;
-        }
-
-        const currentLeft = Number.parseFloat(floatingWidget.style.left);
-        const currentTop = Number.parseFloat(floatingWidget.style.top);
-        if (Number.isFinite(currentLeft) && Number.isFinite(currentTop)) {
-          positionFloatingWidget(currentLeft, currentTop);
-        }
-      }
-
-      function showModule(module) {
-        navButtons.forEach((button) => button.classList.toggle("active", button.dataset.moduleTarget === module));
-        sections.forEach((section) => section.classList.toggle("active", section.dataset.module === module));
-        pageTitle.textContent = moduleMeta[module].title;
-        pageSubtitle.textContent = moduleMeta[module].subtitle;
-      }
-
-      navButtons.forEach((button) => {
-        button.addEventListener("click", () => showModule(button.dataset.moduleTarget));
+function renderFloatingDigits(value) {
+  const valueText = String(clamp(value, 0, 30)).padStart(2, "0");
+  floatingDigitBoard.replaceChildren(
+    ...valueText.split("").map((char) => {
+      const digit = document.createElement("div");
+      digit.className = "floating-digit";
+      floatingDigitMap[char].forEach((row) => {
+        row.split("").forEach((cell) => {
+          const pixel = document.createElement("span");
+          pixel.className = cell === "1" ? "floating-pixel on" : "floating-pixel";
+          digit.appendChild(pixel);
+        });
       });
+      return digit;
+    })
+  );
+}
 
-      document.querySelectorAll("[data-jump]").forEach((button) => {
-        button.addEventListener("click", () => showModule(button.dataset.jump));
-      });
+function updateFloatingDisplay(daysLeft, temp) {
+  renderFloatingDigits(daysLeft);
+  floatingDigitBoard.classList.toggle("danger", daysLeft < 7);
+  floatingTempReadout.textContent = `${temp}°C`;
+  floatingTempReadout.classList.toggle("danger", temp > 65);
+  floatingWidget.setAttribute("aria-label", `悬浮监控球，剩余天数 ${daysLeft} 天，当前核心温度 ${temp} 摄氏度`);
+}
 
-      function showToast(message) {
-        const toast = document.createElement("div");
-        toast.className = "toast";
-        toast.textContent = message;
-        toastStack.appendChild(toast);
-        window.setTimeout(() => {
-          toast.remove();
-        }, 2600);
-      }
+function resetFloatingTilt() {
+  floatingMotion.targetX = 0;
+  floatingMotion.targetY = 0;
+}
 
-      function openModal(key) {
-        const current = modalContent[key] || modalContent.cooling;
-        pendingModalKey = key;
-        modalTitle.textContent = current.title;
-        modalDescription.textContent = current.description;
-        modalConsent.checked = false;
-        modalOverlay.classList.add("show");
-      }
+function updateFloatingTilt(clientX, clientY) {
+  const rect = floatingOrb.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const normalizedX = clamp((clientX - centerX) / (rect.width * 0.62), -1, 1);
+  const normalizedY = clamp((clientY - centerY) / (rect.height * 0.62), -1, 1);
+  floatingMotion.targetY = normalizedX * 14;
+  floatingMotion.targetX = -normalizedY * 14;
+}
 
-      function closeModal() {
-        modalOverlay.classList.remove("show");
-      }
+function renderFloatingOrb() {
+  floatingMotion.currentX += (floatingMotion.targetX - floatingMotion.currentX) * 0.18;
+  floatingMotion.currentY += (floatingMotion.targetY - floatingMotion.currentY) * 0.18;
+  floatingWidget.style.setProperty("--rotate-x", `${floatingMotion.currentX.toFixed(2)}deg`);
+  floatingWidget.style.setProperty("--rotate-y", `${floatingMotion.currentY.toFixed(2)}deg`);
+  floatingWidget.style.setProperty("--shadow-x", `${(-floatingMotion.currentY * 1.05).toFixed(2)}px`);
+  floatingWidget.style.setProperty("--shadow-scale", `${(1 - Math.abs(floatingMotion.currentY) * 0.01).toFixed(3)}`);
+  floatingWidget.style.setProperty("--glow-x", `${clamp(50 - floatingMotion.currentY * 0.75, 40, 60).toFixed(2)}%`);
+  floatingWidget.style.setProperty("--glow-y", `${clamp(22 + floatingMotion.currentX * 0.6, 15, 31).toFixed(2)}%`);
+  floatingWidget.style.setProperty("--display-shift-x", `${(floatingMotion.currentY * 0.65).toFixed(2)}px`);
+  floatingWidget.style.setProperty("--display-shift-y", `${(-floatingMotion.currentX * 0.5).toFixed(2)}px`);
+  requestAnimationFrame(renderFloatingOrb);
+}
 
-      document.querySelectorAll("[data-modal]").forEach((button) => {
-        button.addEventListener("click", () => openModal(button.dataset.modal));
-      });
+function positionFloatingWidget(x, y) {
+  const rect = floatingWidget.getBoundingClientRect();
+  const maxX = Math.max(16, window.innerWidth - rect.width - 16);
+  const maxY = Math.max(16, window.innerHeight - rect.height - 16);
+  floatingWidget.style.left = `${clamp(x, 16, maxX)}px`;
+  floatingWidget.style.top = `${clamp(y, 16, maxY)}px`;
+}
 
-      document.getElementById("cancelModal").addEventListener("click", closeModal);
-      modalOverlay.addEventListener("click", (event) => {
-        if (event.target === modalOverlay) closeModal();
-      });
+function syncFloatingWidgetPosition(forceReset = false) {
+  if (isFloatingInline()) {
+    floatingWidget.style.removeProperty("left");
+    floatingWidget.style.removeProperty("top");
+    floatingDrag.initialized = false;
+    return;
+  }
 
-      document.getElementById("confirmModal").addEventListener("click", () => {
-        if (!modalConsent.checked) {
-          showToast("请先确认已知晓风险后再继续执行。");
-          return;
-        }
+  if (forceReset || !floatingDrag.initialized) {
+    positionFloatingWidget(window.innerWidth - 148, window.innerHeight - 164);
+    floatingDrag.initialized = true;
+    return;
+  }
 
-        const actionTextMap = {
-          cooling: "已执行一键降温策略。",
-          "deep-clean": "深度清理任务已加入执行队列。",
-          export: "已生成导出任务，并按当前筛选条件输出。",
-          pressure: "压力测试已启动，结果将在评测页回写。",
-          threshold: "阈值变更任务已确认。",
-          permission: "已打开权限策略说明。"
+  const currentLeft = Number.parseFloat(floatingWidget.style.left);
+  const currentTop = Number.parseFloat(floatingWidget.style.top);
+  if (Number.isFinite(currentLeft) && Number.isFinite(currentTop)) {
+    positionFloatingWidget(currentLeft, currentTop);
+  }
+}
+
+function showModule(module) {
+  navButtons.forEach((button) => button.classList.toggle("active", button.dataset.moduleTarget === module));
+  sections.forEach((section) => section.classList.toggle("active", section.dataset.module === module));
+  pageTitle.textContent = moduleMeta[module].title;
+  pageSubtitle.textContent = moduleMeta[module].subtitle;
+}
+
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  toastStack.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 2200);
+}
+
+function openModal(action) {
+  pendingAction = action;
+  modalTitle.textContent = action.title;
+  modalDescription.textContent = action.description;
+  modalConsent.checked = false;
+  modalOverlay.classList.add("show");
+}
+
+function closeModal() {
+  modalOverlay.classList.remove("show");
+  pendingAction = null;
+}
+
+function openDrawer(detail) {
+  document.getElementById("detailTitle").textContent = detail.title;
+  document.getElementById("detailDescription").textContent = detail.description;
+  document.getElementById("detailScope").textContent = detail.scope;
+  document.getElementById("detailAction").textContent = detail.action;
+  detailDrawerOverlay.classList.add("show");
+}
+
+function formatRiskBadge(risk) {
+  if (risk === "high") return '<span class="risk-badge high">高</span>';
+  if (risk === "medium") return '<span class="risk-badge medium">中</span>';
+  return '<span class="risk-badge low">低</span>';
+}
+
+function formatStatusBadge(status) {
+  if (status === "异常") return '<span class="status-badge danger">异常</span>';
+  if (status === "未处理") return '<span class="status-badge danger">未处理</span>';
+  if (status === "已确认") return '<span class="status-badge warning">已确认</span>';
+  if (status === "离线") return '<span class="status-badge warning">离线</span>';
+  if (status === "已忽略" || status === "已关闭" || status === "在线") {
+    return `<span class="status-badge normal">${status}</span>`;
+  }
+  return `<span class="status-badge normal">${status}</span>`;
+}
+
+function getHostById(id) {
+  return hosts.find((host) => host.id === id);
+}
+
+function getAllDisks() {
+  return hosts.flatMap((host) =>
+    host.partitions.map((disk) => ({
+      ...disk,
+      hostId: host.id,
+      hostName: host.name
+    }))
+  );
+}
+
+function createWave(base, amplitude, points, offset, min, max) {
+  return Array.from({ length: points }, (_, index) => {
+    const value = base + Math.sin((index + offset) / 2.4) * amplitude + Math.cos((index + offset) / 4.6) * amplitude * 0.4;
+    return clamp(Math.round(value), min, max);
+  });
+}
+
+function renderSparkline(targetId, values, color) {
+  const svg = document.getElementById(targetId);
+  if (!svg) return;
+  const width = 280;
+  const height = 58;
+  const step = width / (values.length - 1);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const normalize = (value) => {
+    const range = max - min || 1;
+    return height - ((value - min) / range) * 42 - 8;
+  };
+  const path = values.map((value, index) => `${index === 0 ? "M" : "L"} ${index * step} ${normalize(value)}`).join(" ");
+  svg.innerHTML = `
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"></path>
+    ${values.map((value, index) => `<circle cx="${index * step}" cy="${normalize(value)}" r="2.5" fill="${color}"></circle>`).join("")}
+  `;
+}
+
+function renderPagination(targetId, totalPages, activePage, onChange) {
+  const target = document.getElementById(targetId);
+  target.innerHTML = "";
+  Array.from({ length: totalPages }, (_, index) => index + 1).forEach((page) => {
+    const button = document.createElement("button");
+    button.className = `page-button${page === activePage ? " active" : ""}`;
+    button.textContent = page;
+    button.addEventListener("click", () => onChange(page));
+    target.appendChild(button);
+  });
+}
+
+function mutateLiveData() {
+  liveTick += 1;
+
+  hosts = hosts.map((host, index) => {
+    if (host.status === "离线") return host;
+
+    const cpu = clamp(Math.round(host.baseCpu + Math.sin((liveTick + index) / 1.9) * 6), 12, 97);
+    const memory = clamp(Math.round(host.baseMemory + Math.cos((liveTick + index) / 2.4) * 4), 24, 96);
+    const disk = clamp(Math.round(host.baseDisk + Math.sin((liveTick + index) / 5) * 2), 30, 96);
+    const daysLeft = clamp(Math.round((100 - disk) * 0.95), 2, 99);
+    const temp = clamp(Math.round(46 + cpu * 0.28), 42, 88);
+
+    return {
+      ...host,
+      cpu,
+      memory,
+      disk,
+      daysLeft,
+      temp,
+      partitions: host.partitions.map((diskItem, diskIndex) => {
+        const used = clamp(Math.round(diskItem.usedBase + Math.cos((liveTick + index + diskIndex) / 3) * 2), 40, 96);
+        return {
+          ...diskItem,
+          used,
+          daysLeft: clamp(Math.round((100 - used) * 0.9), 2, 99)
         };
+      })
+    };
+  });
 
-        pushQueue(pendingModalKey, actionTextMap[pendingModalKey] || "操作已确认执行。");
-        showToast(actionTextMap[pendingModalKey] || "操作已确认执行。");
-        closeModal();
-      });
+  processes = processes.map((process, index) => ({
+    ...process,
+    cpu: clamp(Math.round(process.cpu + Math.sin((liveTick + index) / 2) * 2), 4, 95),
+    memory: Number.parseFloat(clamp(process.memory + Math.cos((liveTick + index) / 3) * 0.1, 0.8, 8).toFixed(1))
+  }));
+}
 
-      function openDetail(key) {
-        const detail = detailMap[key];
-        if (!detail) return;
+function renderOverview() {
+  const disks = getAllDisks();
+  const cpuAverage = Math.round(hosts.reduce((sum, host) => sum + host.cpu, 0) / hosts.length);
+  const memoryAverage = Math.round(hosts.reduce((sum, host) => sum + host.memory, 0) / hosts.length);
+  const diskAverage = Math.round(disks.reduce((sum, disk) => sum + disk.used, 0) / disks.length);
+  const minDays = Math.min(...disks.map((disk) => disk.daysLeft));
 
-        document.getElementById("detailTitle").textContent = detail.title;
-        document.getElementById("detailDescription").textContent = detail.description;
-        document.getElementById("detailScope").textContent = detail.scope;
-        document.getElementById("detailAction").textContent = detail.action;
-        document.getElementById("detailLogs").textContent = detail.logs;
-        detailDrawerOverlay.classList.add("show");
-      }
+  document.getElementById("overviewCpuValue").textContent = `${cpuAverage}%`;
+  document.getElementById("overviewMemoryValue").textContent = `${memoryAverage}%`;
+  document.getElementById("overviewDiskValue").textContent = `${diskAverage}%`;
+  document.getElementById("overviewDaysValue").textContent = `${minDays} 天`;
 
-      document.querySelectorAll("[data-detail]").forEach((button) => {
-        button.addEventListener("click", () => openDetail(button.dataset.detail));
-      });
+  renderSparkline("overviewCpuSpark", createWave(cpuAverage, 8, 12, liveTick, 20, 96), getCssVar("--brand"));
+  renderSparkline("overviewMemorySpark", createWave(memoryAverage, 6, 12, liveTick + 1.5, 24, 96), "#76d38b");
+  renderSparkline("overviewDiskSpark", createWave(diskAverage, 3, 12, liveTick + 2.8, 36, 98), getCssVar("--accent"));
+  renderSparkline("overviewDaysSpark", createWave(minDays, 2, 12, liveTick + 3.1, 2, 30), "#ffb84d");
 
-      detailDrawerOverlay.addEventListener("click", (event) => {
-        if (event.target === detailDrawerOverlay) detailDrawerOverlay.classList.remove("show");
-      });
-      document.getElementById("closeDrawer").addEventListener("click", () => detailDrawerOverlay.classList.remove("show"));
+  document.getElementById("overviewHostRows").innerHTML = hosts
+    .slice()
+    .sort((a, b) => b.cpu - a.cpu)
+    .slice(0, 4)
+    .map(
+      (host) => `
+        <div class="table-body-row">
+          <div class="row-title"><strong>${host.name}</strong></div>
+          <span>${host.ip}</span>
+          <strong>${host.cpu}%</strong>
+          <strong>${host.memory}%</strong>
+          <strong>${host.disk}%</strong>
+          <strong>${host.daysLeft} 天</strong>
+        </div>
+      `
+    )
+    .join("");
+}
 
-      function pushQueue(type, message) {
-        const time = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
-        const tagMap = {
-          cooling: ["正常", "已完成"],
-          "deep-clean": ["警告", "排队中"],
-          export: ["正常", "已完成"],
-          pressure: ["警告", "执行中"],
-          permission: ["正常", "已查看"]
-        };
+function renderDiskHostOptions() {
+  const select = document.getElementById("diskHostFilter");
+  const currentValue = select.value || "all";
+  select.innerHTML = `<option value="all">全部主机</option>${hosts
+    .map((host) => `<option value="${host.id}">${host.name}</option>`)
+    .join("")}`;
+  select.value = hosts.some((host) => host.id === currentValue) ? currentValue : "all";
+}
 
-        const [kind, label] = tagMap[type] || ["正常", "已完成"];
-        queueItems.unshift({ kind, label, message, time });
-        renderQueue();
-      }
+function renderHostTable() {
+  let filtered = hosts.filter((host) => {
+    const keyword = hostState.search.trim().toLowerCase();
+    const matchesKeyword = !keyword || [host.name, host.ip].join(" ").toLowerCase().includes(keyword);
+    const matchesOs = hostState.os === "all" || host.os === hostState.os;
+    return matchesKeyword && matchesOs;
+  });
 
-      function renderQueue() {
-        const queueList = document.getElementById("queueList");
-        const defaults = [
-          { kind: "warning", label: "排队中", title: "驱动兼容补丁", message: "等待管理员确认后执行", time: "10:08" },
-          { kind: "normal", label: "已完成", title: "临时文件清理", message: "已释放 4.8 GB 空间", time: "09:54" },
-          { kind: "danger", label: "告警", title: "GPU 高温事件", message: "已触发弹窗并记录 2 条日志", time: "09:41" }
-        ];
+  filtered = filtered.sort((a, b) => {
+    if (hostState.sort === "memory-desc") return b.memory - a.memory;
+    if (hostState.sort === "disk-desc") return b.disk - a.disk;
+    return b.cpu - a.cpu;
+  });
 
-        const merged = queueItems.map((item) => ({
-          kind: item.kind === "警告" ? "warning" : item.kind === "危险" ? "danger" : "normal",
-          label: item.label,
-          title: "执行任务",
-          message: item.message,
-          time: item.time
-        })).concat(defaults).slice(0, 5);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / hostState.pageSize));
+  hostState.page = Math.min(hostState.page, totalPages);
+  const startIndex = (hostState.page - 1) * hostState.pageSize;
+  const pageItems = filtered.slice(startIndex, startIndex + hostState.pageSize);
 
-        queueList.innerHTML = merged.map((item) => `
-          <div class="queue-item">
-            <span class="status-badge ${item.kind}">${item.label}</span>
-            <div><strong>${item.title}</strong><span>${item.message}</span></div>
-            <span>${item.time}</span>
+  document.getElementById("hostRows").innerHTML = pageItems
+    .map(
+      (host) => `
+        <div class="table-body-row">
+          <div class="row-title"><strong>${host.name}</strong></div>
+          <span>${host.ip}</span>
+          <span>${host.os}</span>
+          <span>${formatStatusBadge(host.status)}</span>
+          <strong>${host.cpu}%</strong>
+          <strong>${host.memory}%</strong>
+          <strong>${host.disk}%</strong>
+          <strong>${host.daysLeft} 天</strong>
+          <div class="row-actions">
+            <button class="table-action" data-action="open-detail" data-kind="host" data-id="${host.id}">详情</button>
           </div>
-        `).join("");
-      }
+        </div>
+      `
+    )
+    .join("");
 
-      function renderSparkline(targetId, values, color) {
-        const svg = document.getElementById(targetId);
-        if (!svg) return;
+  document.getElementById("hostSummary").textContent = `共 ${filtered.length} 台`;
+  renderPagination("hostPagination", totalPages, hostState.page, (page) => {
+    hostState.page = page;
+    renderHostTable();
+  });
+}
 
-        const width = 280;
-        const height = 58;
-        const step = width / (values.length - 1);
-        const max = Math.max(...values);
-        const min = Math.min(...values);
-        const normalize = (value) => {
-          const range = max - min || 1;
-          return height - ((value - min) / range) * 42 - 8;
-        };
-        const path = values.map((value, index) => `${index === 0 ? "M" : "L"} ${index * step} ${normalize(value)}`).join(" ");
+function renderProcessTable() {
+  let filtered = processes.filter((process) => {
+    const host = getHostById(process.hostId);
+    const keyword = processState.search.trim().toLowerCase();
+    const matchesKeyword = !keyword || [process.name, host.name].join(" ").toLowerCase().includes(keyword);
+    const matchesRisk = processState.risk === "all" || process.risk === processState.risk;
+    const matchesWhite =
+      processState.whitelist === "all" ||
+      (processState.whitelist === "hit" && process.whitelisted) ||
+      (processState.whitelist === "miss" && !process.whitelisted);
+    return matchesKeyword && matchesRisk && matchesWhite;
+  });
 
-        svg.innerHTML = `
-          <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"></path>
-          ${values.map((value, index) => `<circle cx="${index * step}" cy="${normalize(value)}" r="2.5" fill="${color}"></circle>`).join("")}
-        `;
-      }
+  filtered = filtered.sort((a, b) => {
+    if (processState.sort === "memory-desc") return b.memory - a.memory;
+    if (processState.sort === "duration-desc") return b.durationMinutes - a.durationMinutes;
+    return b.cpu - a.cpu;
+  });
 
-      function buildChart(svgId, cpuData, gpuData, memoryData) {
-        const svg = document.getElementById(svgId);
-        if (!svg) return;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / processState.pageSize));
+  processState.page = Math.min(processState.page, totalPages);
+  const startIndex = (processState.page - 1) * processState.pageSize;
+  const pageItems = filtered.slice(startIndex, startIndex + processState.pageSize);
 
-        const width = 760;
-        const height = 220;
-        const top = 18;
-        const left = 8;
-        const usableHeight = 168;
-        const bottom = 198;
-        const step = (width - left * 2) / (cpuData.length - 1);
-        const normalize = (value) => bottom - (value / 100) * usableHeight;
-
-        function pathFor(values) {
-          return values.map((value, index) => `${index === 0 ? "M" : "L"} ${left + index * step} ${normalize(value)}`).join(" ");
-        }
-
-        const labels = Array.from({ length: 6 }, (_, index) => 10 * index).map((item) => `${item}m`);
-
-        svg.innerHTML = `
-          <rect x="0" y="${normalize(84)}" width="${width}" height="${bottom - normalize(84)}" fill="rgba(194,65,12,0.08)"></rect>
-          ${Array.from({ length: 5 }, (_, index) => {
-            const y = top + index * 42;
-            return `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="rgba(99,117,106,0.14)" stroke-dasharray="4 6"></line>`;
-          }).join("")}
-          <path d="${pathFor(cpuData)}" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue("--brand").trim()}" stroke-width="3.2" stroke-linecap="round"></path>
-          <path d="${pathFor(gpuData)}" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()}" stroke-width="3.2" stroke-linecap="round"></path>
-          <path d="${pathFor(memoryData)}" fill="none" stroke="#5f8f4a" stroke-width="3.2" stroke-linecap="round"></path>
-          ${labels.map((label, index) => `<text x="${left + index * ((width - left * 2) / (labels.length - 1))}" y="214" fill="#63756a" font-size="12">${label}</text>`).join("")}
-        `;
-      }
-
-      function createWave(base, amplitude, points, offset) {
-        return Array.from({ length: points }, (_, index) => {
-          const value = base + Math.sin((index + offset) / 2.2) * amplitude + Math.cos((index + offset) / 4.8) * amplitude * 0.45;
-          return Math.max(24, Math.min(94, Math.round(value)));
-        });
-      }
-
-      function refreshCharts() {
-        monitorSeed += 1;
-        const cpu = createWave(58, 18, 12, monitorSeed);
-        const gpu = createWave(67, 16, 12, monitorSeed + 1.7);
-        const memory = createWave(61, 8, 12, monitorSeed + 3.2);
-
-        renderSparkline("overviewCpuSpark", cpu, "#0f766e");
-        renderSparkline("overviewMemorySpark", memory, "#5f8f4a");
-        renderSparkline("overviewLogSpark", createWave(72, 5, 12, monitorSeed + 2.3), "#d97706");
-        renderSparkline("overviewTempSpark", gpu, "#c2410c");
-        buildChart("overviewMonitorChart", cpu, gpu, memory);
-        buildChart("liveMonitorChart", cpu, gpu, memory);
-
-        const latestCpu = cpu[cpu.length - 1];
-        const latestGpu = gpu[gpu.length - 1];
-        const latestMemory = memory[memory.length - 1];
-        const latestTemp = Math.round(64 + (latestGpu - 60) * 0.55);
-        const remainingDays = calculateRemainingDays(latestTemp);
-
-        updateRealtimeNumbers(latestCpu, latestGpu, latestMemory, latestTemp, remainingDays);
-      }
-
-      function updateRealtimeNumbers(cpu, gpu, memory, temp, remainingDays) {
-        document.getElementById("overviewCpuValue").textContent = `${cpu}%`;
-        document.getElementById("cpuMetricLarge").textContent = `${cpu}%`;
-        document.getElementById("bottomCpu").textContent = `${cpu}%`;
-
-        const memoryGb = (32 - (memory / 100) * 32).toFixed(1);
-        document.getElementById("overviewMemoryValue").textContent = `${memoryGb} GB`;
-        document.getElementById("bottomMemory").textContent = `${memory}%`;
-
-        document.getElementById("overviewTempValue").textContent = `${temp}°C`;
-        document.getElementById("tempMetricLarge").textContent = `${temp}°C`;
-        updateFloatingDisplay(remainingDays, temp);
-
-        document.getElementById("bottomGpu").textContent = `${gpu}%`;
-        document.getElementById("bottomDisk").textContent = `${Math.max(82, Math.min(96, Math.round(88 + Math.sin(monitorSeed / 3) * 4)))}%`;
-
-        document.getElementById("sensorCpuTemp").textContent = `${temp}°C`;
-        document.getElementById("sensorGpuTemp").textContent = `${Math.min(88, temp + 14)}°C`;
-        document.getElementById("sensorFan").textContent = `${3200 + Math.round(Math.sin(monitorSeed / 2) * 180)} RPM`;
-        document.getElementById("liveAverage").textContent = `${Math.round((cpu + gpu + memory) / 3)}%`;
-      }
-
-      function startHealthScan() {
-        if (healthScanTimer) {
-          showToast("体检任务正在执行中。");
-          return;
-        }
-
-        const steps = [
-          "准备扫描环境",
-          "检测 CPU 与频率状态",
-          "检测显卡与温度波动",
-          "检测系统盘空间与健康状态",
-          "校验驱动与兼容补丁",
-          "汇总结果并生成建议"
-        ];
-
-        healthProgress = 0;
-        updateHealthProgress(0, steps[0], "0 项异常 / 0 项建议");
-        showToast("体检任务已启动。");
-
-        healthScanTimer = window.setInterval(() => {
-          healthProgress += 16 + Math.round(Math.random() * 6);
-          const capped = Math.min(100, healthProgress);
-          const stepIndex = Math.min(steps.length - 1, Math.floor((capped / 100) * steps.length));
-          const issueText = capped < 40 ? "0 项异常 / 1 项建议" : capped < 75 ? "1 项异常 / 2 项建议" : "1 项异常 / 3 项建议";
-          updateHealthProgress(capped, steps[stepIndex], issueText);
-
-          if (capped >= 100) {
-            window.clearInterval(healthScanTimer);
-            healthScanTimer = null;
-            document.getElementById("healthIssueCount").textContent = "1 项高风险 / 2 项中风险 / 3 项建议";
-            document.getElementById("healthIgnoredCount").textContent = "1";
-            showToast("体检完成，已生成处理建议。");
-            pushQueue("cooling", "体检完成，发现 1 项高风险与 5 项建议。");
-          }
-        }, 520);
-      }
-
-      function updateHealthProgress(progress, step, summary) {
-        document.getElementById("healthProgressBar").style.width = `${progress}%`;
-        document.getElementById("healthProgressText").textContent = `${progress}%`;
-        document.getElementById("healthCurrentStep").textContent = step;
-        document.getElementById("healthIssueCount").textContent = summary;
-      }
-
-      function formatRiskText(risk) {
-        if (risk === "high") return '<span class="risk-badge high">高风险</span>';
-        if (risk === "medium") return '<span class="risk-badge medium">中风险</span>';
-        return '<span class="risk-badge low">低风险</span>';
-      }
-
-      function renderCleanupTable() {
-        const keyword = cleanupState.search.trim().toLowerCase();
-        let filtered = cleanupData.filter((item) => {
-          const matchesSearch = !keyword || [item.name, item.type, item.description].join(" ").toLowerCase().includes(keyword);
-          const matchesRisk = cleanupState.risk === "all" || item.risk === cleanupState.risk;
-          const matchesType = cleanupState.type === "all" || item.type === cleanupState.type;
-          return matchesSearch && matchesRisk && matchesType;
-        });
-
-        filtered = filtered.sort((a, b) => {
-          if (cleanupState.sort === "size-desc") return b.size - a.size;
-          if (cleanupState.sort === "size-asc") return a.size - b.size;
-          if (cleanupState.sort === "risk-desc") {
-            const weight = { high: 3, medium: 2, low: 1 };
-            return weight[b.risk] - weight[a.risk];
-          }
-          return a.name.localeCompare(b.name, "zh-CN");
-        });
-
-        const totalPages = Math.max(1, Math.ceil(filtered.length / cleanupState.pageSize));
-        cleanupState.page = Math.min(cleanupState.page, totalPages);
-        const startIndex = (cleanupState.page - 1) * cleanupState.pageSize;
-        const pageItems = filtered.slice(startIndex, startIndex + cleanupState.pageSize);
-
-        document.getElementById("cleanupRows").innerHTML = pageItems.map((item) => `
-          <div class="table-body-row cleanup-row">
-            <span><input class="check cleanup-check" data-id="${item.id}" type="checkbox" ${cleanupState.selected.has(item.id) ? "checked" : ""} /></span>
-            <div class="row-title">
-              <strong>${item.name}</strong>
-              <span class="table-meta">${item.description}</span>
-            </div>
-            <span>${item.type}</span>
-            <span>${formatRiskText(item.risk)}</span>
-            <strong>${item.size.toFixed(1)} GB</strong>
-            <span>${item.description}</span>
-            <div class="row-actions">
-              <button class="table-action">${item.action}</button>
-              <button class="table-action" data-modal="${item.risk === "high" ? "deep-clean" : "export"}">详情</button>
-            </div>
+  document.getElementById("processRows").innerHTML = pageItems
+    .map((process) => {
+      const host = getHostById(process.hostId);
+      return `
+        <div class="table-body-row">
+          <div class="row-title"><strong>${process.name}</strong></div>
+          <span>${host.name}</span>
+          <strong>${process.cpu}%</strong>
+          <strong>${process.memory.toFixed(1)} GB</strong>
+          <span>${process.durationMinutes} 分钟</span>
+          <span>${process.whitelisted ? '<span class="status-badge normal">已保护</span>' : '<span class="status-badge warning">未命中</span>'}</span>
+          <div class="row-actions">
+            <button class="table-action" data-action="open-detail" data-kind="process" data-id="${process.id}">详情</button>
+            <button class="table-action primary" data-action="toggle-whitelist" data-id="${process.id}">${process.whitelisted ? "查看白名单" : "加入白名单"}</button>
           </div>
-        `).join("");
+        </div>
+      `;
+    })
+    .join("");
 
-        document.getElementById("cleanupSummary").textContent = `共 ${filtered.length} 项，当前第 ${cleanupState.page} / ${totalPages} 页`;
-        renderPagination("cleanupPagination", totalPages, cleanupState.page, (page) => {
-          cleanupState.page = page;
-          renderCleanupTable();
-        });
+  document.getElementById("processSummary").textContent = `共 ${filtered.length} 条`;
+  renderPagination("processPagination", totalPages, processState.page, (page) => {
+    processState.page = page;
+    renderProcessTable();
+  });
+}
 
-        document.querySelectorAll(".cleanup-check").forEach((checkbox) => {
-          checkbox.addEventListener("change", () => {
-            const id = Number(checkbox.dataset.id);
-            if (checkbox.checked) cleanupState.selected.add(id);
-            else cleanupState.selected.delete(id);
-            updateCleanupSelectionSummary();
-          });
-        });
+function renderDiskTable() {
+  let filtered = getAllDisks().filter((disk) => {
+    const matchesHost = diskState.hostId === "all" || disk.hostId === diskState.hostId;
+    const matchesRisk = diskState.risk === "all" || disk.risk === diskState.risk;
+    return matchesHost && matchesRisk;
+  });
 
-        document.querySelectorAll("#cleanupRows [data-modal]").forEach((button) => {
-          button.addEventListener("click", () => openModal(button.dataset.modal));
-        });
+  filtered = filtered.sort((a, b) => {
+    if (diskState.sort === "usage-desc") return b.used - a.used;
+    if (diskState.sort === "growth-desc") return b.growth - a.growth;
+    return a.daysLeft - b.daysLeft;
+  });
 
-        updateCleanupSelectionSummary();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / diskState.pageSize));
+  diskState.page = Math.min(diskState.page, totalPages);
+  const startIndex = (diskState.page - 1) * diskState.pageSize;
+  const pageItems = filtered.slice(startIndex, startIndex + diskState.pageSize);
+
+  document.getElementById("diskRows").innerHTML = pageItems
+    .map(
+      (disk) => `
+        <div class="table-body-row">
+          <div class="row-title"><strong>${disk.name}</strong></div>
+          <span>${disk.hostName}</span>
+          <strong>${disk.used}%</strong>
+          <span>${disk.freeText}</span>
+          <span>${disk.growth.toFixed(1)} GB/天</span>
+          <strong>${disk.daysLeft} 天</strong>
+          <div class="row-actions">
+            <button class="table-action" data-action="open-detail" data-kind="disk" data-id="${disk.id}">详情</button>
+            <button class="table-action primary" data-action="archive-disk" data-id="${disk.id}">整理</button>
+          </div>
+        </div>
+      `
+    )
+    .join("");
+
+  document.getElementById("diskSummary").textContent = `共 ${filtered.length} 条`;
+  renderPagination("diskPagination", totalPages, diskState.page, (page) => {
+    diskState.page = page;
+    renderDiskTable();
+  });
+}
+
+function renderAlertTable() {
+  let filtered = alerts.filter((alert) => {
+    const host = getHostById(alert.hostId);
+    const keyword = alertState.search.trim().toLowerCase();
+    const matchesKeyword = !keyword || [alert.type, host.name].join(" ").toLowerCase().includes(keyword);
+    const matchesStatus = alertState.status === "all" || alert.status === alertState.status;
+    const matchesRisk = alertState.risk === "all" || alert.severity === alertState.risk;
+    return matchesKeyword && matchesStatus && matchesRisk;
+  });
+
+  filtered = filtered.sort((a, b) => riskWeight[b.severity] - riskWeight[a.severity] || b.time.localeCompare(a.time));
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / alertState.pageSize));
+  alertState.page = Math.min(alertState.page, totalPages);
+  const startIndex = (alertState.page - 1) * alertState.pageSize;
+  const pageItems = filtered.slice(startIndex, startIndex + alertState.pageSize);
+
+  document.getElementById("alertRows").innerHTML = pageItems
+    .map((alert) => {
+      const host = getHostById(alert.hostId);
+      return `
+        <div class="table-body-row">
+          <span>${alert.time}</span>
+          <div class="row-title"><strong>${host.name}</strong></div>
+          <span>${alert.type}</span>
+          <span>${formatRiskBadge(alert.severity)}</span>
+          <span>${formatStatusBadge(alert.status)}</span>
+          <div class="row-actions">
+            <button class="table-action" data-action="open-detail" data-kind="alert" data-id="${alert.id}">详情</button>
+            ${alert.status === "未处理" ? `<button class="table-action" data-action="set-alert-status" data-id="${alert.id}" data-status="已确认">确认</button>` : ""}
+            ${alert.status !== "已关闭" ? `<button class="table-action primary" data-action="set-alert-status" data-id="${alert.id}" data-status="已关闭">关闭</button>` : ""}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  document.getElementById("alertSummary").textContent = `共 ${filtered.length} 条`;
+  renderPagination("alertPagination", totalPages, alertState.page, (page) => {
+    alertState.page = page;
+    renderAlertTable();
+  });
+}
+
+function renderWhitelistTable() {
+  document.getElementById("whitelistRows").innerHTML = whitelistEntries
+    .map(
+      (item) => `
+        <div class="table-body-row">
+          <div class="row-title"><strong>${item.processName}</strong></div>
+          <span>${item.path}</span>
+          <span>${item.hostType}</span>
+          <span>${item.protectionLevel}</span>
+          <span>${item.remark}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function renderBottomBar() {
+  const disks = getAllDisks();
+  const cpuAverage = Math.round(hosts.reduce((sum, host) => sum + host.cpu, 0) / hosts.length);
+  const memoryAverage = Math.round(hosts.reduce((sum, host) => sum + host.memory, 0) / hosts.length);
+  const diskAverage = Math.round(disks.reduce((sum, disk) => sum + disk.used, 0) / disks.length);
+  const minDays = Math.min(...disks.map((disk) => disk.daysLeft));
+  const hottestHost = hosts.slice().sort((a, b) => b.temp - a.temp)[0];
+
+  document.getElementById("bottomCpu").textContent = `${cpuAverage}%`;
+  document.getElementById("bottomMemory").textContent = `${memoryAverage}%`;
+  document.getElementById("bottomDisk").textContent = `${diskAverage}%`;
+  document.getElementById("bottomDays").textContent = `${minDays} 天`;
+
+  updateFloatingDisplay(minDays, hottestHost.temp);
+}
+
+function buildDetail(kind, id) {
+  if (kind === "host") {
+    const host = getHostById(id);
+    return {
+      title: host.name,
+      description: `${host.ip} · ${host.os}`,
+      scope: `CPU ${host.cpu}% · 内存 ${host.memory}% · 磁盘 ${host.disk}% · 预计 ${host.daysLeft} 天`,
+      action: "继续观察主机资源变化，必要时进入进程分析或磁盘趋势。"
+    };
+  }
+
+  if (kind === "process") {
+    const process = processes.find((item) => item.id === id);
+    const host = getHostById(process.hostId);
+    return {
+      title: process.name,
+      description: `${host.name}`,
+      scope: `CPU ${process.cpu}% · 内存 ${process.memory.toFixed(1)} GB · 持续 ${process.durationMinutes} 分钟`,
+      action: process.whitelisted ? "当前为白名单对象，仅建议观察。" : "可评估是否加入白名单。"
+    };
+  }
+
+  if (kind === "disk") {
+    const disk = getAllDisks().find((item) => item.id === id);
+    return {
+      title: `${disk.hostName} / ${disk.name}`,
+      description: disk.logDir,
+      scope: `使用率 ${disk.used}% · 剩余空间 ${disk.freeText} · 增长 ${disk.growth.toFixed(1)} GB/天 · 预计 ${disk.daysLeft} 天`,
+      action: "必要时发起日志整理。"
+    };
+  }
+
+  const alert = alerts.find((item) => item.id === id);
+  const host = getHostById(alert.hostId);
+  return {
+    title: alert.type,
+    description: `${host.name} · ${alert.time}`,
+    scope: `${alert.status} · ${alert.severity === "high" ? "高风险" : "中低风险"}`,
+    action: alert.status === "未处理" ? "建议先确认，再决定是否关闭。" : "当前状态已处理。"
+  };
+}
+
+function applyPendingAction() {
+  if (!pendingAction) return;
+
+  if (pendingAction.type === "archive-disk") {
+    const disk = getAllDisks().find((item) => item.id === pendingAction.id);
+    showToast(`${disk.hostName} ${disk.name} 已加入整理队列。`);
+  }
+
+  if (pendingAction.type === "set-alert-status") {
+    const alert = alerts.find((item) => item.id === pendingAction.id);
+    alert.status = pendingAction.status;
+    showToast(`告警已更新为${pendingAction.status}。`);
+    renderAlertTable();
+  }
+
+  if (pendingAction.type === "toggle-whitelist") {
+    const process = processes.find((item) => item.id === pendingAction.id);
+    if (process.whitelisted) {
+      openDrawer(buildDetail("process", process.id));
+      return;
+    }
+    const host = getHostById(process.hostId);
+    process.whitelisted = true;
+    whitelistEntries.unshift({
+      id: `white-${Date.now()}`,
+      processName: process.name,
+      path: host.os === "中标麒麟" ? `/usr/local/${process.name}/${process.name}` : `C:\\Protected\\${process.name}`,
+      hostType: host.os,
+      protectionLevel: "人工观察",
+      remark: "由进程分析加入"
+    });
+    showToast(`${process.name} 已加入白名单。`);
+    renderProcessTable();
+    renderWhitelistTable();
+  }
+}
+
+function renderAll() {
+  renderDiskHostOptions();
+  renderOverview();
+  renderHostTable();
+  renderProcessTable();
+  renderDiskTable();
+  renderAlertTable();
+  renderWhitelistTable();
+  renderBottomBar();
+}
+
+function bindEvents() {
+  navButtons.forEach((button) => {
+    button.addEventListener("click", () => showModule(button.dataset.moduleTarget));
+  });
+
+  document.getElementById("globalRefresh").addEventListener("click", () => {
+    mutateLiveData();
+    renderAll();
+    showToast("数据已刷新。");
+  });
+
+  document.getElementById("cancelModal").addEventListener("click", closeModal);
+  document.getElementById("confirmModal").addEventListener("click", () => {
+    if (!modalConsent.checked) {
+      showToast("请先确认。");
+      return;
+    }
+    applyPendingAction();
+    closeModal();
+  });
+
+  modalOverlay.addEventListener("click", (event) => {
+    if (event.target === modalOverlay) closeModal();
+  });
+
+  detailDrawerOverlay.addEventListener("click", (event) => {
+    if (event.target === detailDrawerOverlay) detailDrawerOverlay.classList.remove("show");
+  });
+
+  document.getElementById("closeDrawer").addEventListener("click", () => detailDrawerOverlay.classList.remove("show"));
+
+  document.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+
+    const { action, id, kind, status } = actionButton.dataset;
+
+    if (action === "open-detail") {
+      openDrawer(buildDetail(kind, id));
+      return;
+    }
+
+    if (action === "archive-disk") {
+      openModal({
+        type: "archive-disk",
+        id,
+        title: "确认日志整理",
+        description: "该操作会把目标目录加入整理队列。"
+      });
+      return;
+    }
+
+    if (action === "set-alert-status") {
+      openModal({
+        type: "set-alert-status",
+        id,
+        status,
+        title: `确认${status}`,
+        description: `将当前告警状态更新为“${status}”。`
+      });
+      return;
+    }
+
+    if (action === "toggle-whitelist") {
+      const process = processes.find((item) => item.id === id);
+      if (process.whitelisted) {
+        openDrawer(buildDetail("process", id));
+        return;
       }
-
-      function updateCleanupSelectionSummary() {
-        const total = cleanupData
-          .filter((item) => cleanupState.selected.has(item.id))
-          .reduce((sum, item) => sum + item.size, 0);
-        document.getElementById("cleanupSelectedSize").textContent = `${total.toFixed(1)} GB`;
-      }
-
-      function renderDriverTable() {
-        const keyword = driverState.search.trim().toLowerCase();
-        let filtered = driverData.filter((item) => {
-          const matchesSearch = !keyword || [item.name, item.vendor, item.current, item.target].join(" ").toLowerCase().includes(keyword);
-          const matchesStatus = driverState.status === "all" || item.status === driverState.status;
-          return matchesSearch && matchesStatus;
-        });
-
-        filtered = filtered.sort((a, b) => {
-          if (driverState.sort === "priority-desc") return b.priority - a.priority;
-          if (driverState.sort === "date-desc") return b.date.localeCompare(a.date);
-          return a.name.localeCompare(b.name, "zh-CN");
-        });
-
-        const totalPages = Math.max(1, Math.ceil(filtered.length / driverState.pageSize));
-        driverState.page = Math.min(driverState.page, totalPages);
-        const startIndex = (driverState.page - 1) * driverState.pageSize;
-        const pageItems = filtered.slice(startIndex, startIndex + driverState.pageSize);
-
-        document.getElementById("driverRows").innerHTML = pageItems.map((item) => {
-          const statusClass = item.status === "异常" ? "danger" : item.status === "推荐更新" ? "warning" : "normal";
-          const actionButtons = item.status === "已安装"
-            ? '<button class="table-action">查看日志</button>'
-            : '<button class="table-action primary driver-install">安装</button><button class="table-action">忽略更新</button>';
-
-          return `
-            <div class="table-body-row driver-row">
-              <div class="row-title">
-                <strong>${item.name}</strong>
-                <span class="table-meta">优先级 ${item.priority}</span>
-              </div>
-              <span>${item.current}</span>
-              <span>${item.target}</span>
-              <span>${item.vendor}</span>
-              <span>${item.date}</span>
-              <span class="status-badge ${statusClass}">${item.status}</span>
-              <div class="row-actions" data-driver-id="${item.id}">${actionButtons}</div>
-            </div>
-          `;
-        }).join("");
-
-        document.getElementById("driverSummary").textContent = `共 ${filtered.length} 项，当前第 ${driverState.page} / ${totalPages} 页`;
-        renderPagination("driverPagination", totalPages, driverState.page, (page) => {
-          driverState.page = page;
-          renderDriverTable();
-        });
-
-        document.querySelectorAll(".driver-install").forEach((button) => {
-          button.addEventListener("click", () => {
-            openModal("permission");
-            pushQueue("pressure", "驱动安装任务已加入队列，等待用户确认。");
-          });
-        });
-      }
-
-      function renderPagination(targetId, totalPages, activePage, onChange) {
-        const target = document.getElementById(targetId);
-        target.innerHTML = "";
-
-        Array.from({ length: totalPages }, (_, index) => index + 1).forEach((page) => {
-          const button = document.createElement("button");
-          button.className = `page-button${page === activePage ? " active" : ""}`;
-          button.textContent = page;
-          button.addEventListener("click", () => onChange(page));
-          target.appendChild(button);
-        });
-      }
-
-      document.getElementById("cleanupSearch").addEventListener("input", (event) => {
-        cleanupState.search = event.target.value;
-        cleanupState.page = 1;
-        renderCleanupTable();
+      openModal({
+        type: "toggle-whitelist",
+        id,
+        title: "白名单操作确认",
+        description: "确认将该进程加入白名单。"
       });
-      document.getElementById("cleanupRiskFilter").addEventListener("change", (event) => {
-        cleanupState.risk = event.target.value;
-        cleanupState.page = 1;
-        renderCleanupTable();
-      });
-      document.getElementById("cleanupTypeFilter").addEventListener("change", (event) => {
-        cleanupState.type = event.target.value;
-        cleanupState.page = 1;
-        renderCleanupTable();
-      });
-      document.getElementById("cleanupSort").addEventListener("change", (event) => {
-        cleanupState.sort = event.target.value;
-        renderCleanupTable();
-      });
-      document.getElementById("cleanupCheckAll").addEventListener("change", (event) => {
-        const checked = event.target.checked;
-        cleanupData.forEach((item) => {
-          if (checked) cleanupState.selected.add(item.id);
-          else cleanupState.selected.delete(item.id);
-        });
-        renderCleanupTable();
-      });
+    }
+  });
 
-      document.getElementById("driverSearch").addEventListener("input", (event) => {
-        driverState.search = event.target.value;
-        driverState.page = 1;
-        renderDriverTable();
-      });
-      document.getElementById("driverStatusFilter").addEventListener("change", (event) => {
-        driverState.status = event.target.value;
-        driverState.page = 1;
-        renderDriverTable();
-      });
-      document.getElementById("driverSort").addEventListener("change", (event) => {
-        driverState.sort = event.target.value;
-        renderDriverTable();
-      });
+  document.getElementById("hostSearch").addEventListener("input", (event) => {
+    hostState.search = event.target.value;
+    hostState.page = 1;
+    renderHostTable();
+  });
+  document.getElementById("hostOsFilter").addEventListener("change", (event) => {
+    hostState.os = event.target.value;
+    hostState.page = 1;
+    renderHostTable();
+  });
+  document.getElementById("hostSort").addEventListener("change", (event) => {
+    hostState.sort = event.target.value;
+    renderHostTable();
+  });
+  document.getElementById("hostPageSize").addEventListener("change", (event) => {
+    hostState.pageSize = Number(event.target.value);
+    hostState.page = 1;
+    renderHostTable();
+  });
 
-      document.getElementById("thresholdForm").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const form = new FormData(event.currentTarget);
-        const cpu = Number(form.get("cpuThreshold"));
-        const gpu = Number(form.get("gpuThreshold"));
-        const memory = Number(form.get("memoryThreshold"));
+  document.getElementById("processSearch").addEventListener("input", (event) => {
+    processState.search = event.target.value;
+    processState.page = 1;
+    renderProcessTable();
+  });
+  document.getElementById("processRiskFilter").addEventListener("change", (event) => {
+    processState.risk = event.target.value;
+    processState.page = 1;
+    renderProcessTable();
+  });
+  document.getElementById("processWhiteFilter").addEventListener("change", (event) => {
+    processState.whitelist = event.target.value;
+    processState.page = 1;
+    renderProcessTable();
+  });
+  document.getElementById("processSort").addEventListener("change", (event) => {
+    processState.sort = event.target.value;
+    renderProcessTable();
+  });
+  document.getElementById("processPageSize").addEventListener("change", (event) => {
+    processState.pageSize = Number(event.target.value);
+    processState.page = 1;
+    renderProcessTable();
+  });
 
-        if (Number.isNaN(cpu) || Number.isNaN(gpu) || Number.isNaN(memory)) {
-          document.getElementById("thresholdHint").textContent = "所有阈值都必须为数值。";
-          return;
-        }
+  document.getElementById("diskHostFilter").addEventListener("change", (event) => {
+    diskState.hostId = event.target.value;
+    diskState.page = 1;
+    renderDiskTable();
+  });
+  document.getElementById("diskRiskFilter").addEventListener("change", (event) => {
+    diskState.risk = event.target.value;
+    diskState.page = 1;
+    renderDiskTable();
+  });
+  document.getElementById("diskSort").addEventListener("change", (event) => {
+    diskState.sort = event.target.value;
+    renderDiskTable();
+  });
+  document.getElementById("diskPageSize").addEventListener("change", (event) => {
+    diskState.pageSize = Number(event.target.value);
+    diskState.page = 1;
+    renderDiskTable();
+  });
 
-        if (cpu < 50 || cpu > 100 || gpu < 50 || gpu > 100 || memory < 30 || memory > 99) {
-          document.getElementById("thresholdHint").textContent = "阈值超出允许范围，请按字段限制重新填写。";
-          return;
-        }
+  document.getElementById("alertSearch").addEventListener("input", (event) => {
+    alertState.search = event.target.value;
+    alertState.page = 1;
+    renderAlertTable();
+  });
+  document.getElementById("alertStatusFilter").addEventListener("change", (event) => {
+    alertState.status = event.target.value;
+    alertState.page = 1;
+    renderAlertTable();
+  });
+  document.getElementById("alertRiskFilter").addEventListener("change", (event) => {
+    alertState.risk = event.target.value;
+    alertState.page = 1;
+    renderAlertTable();
+  });
+  document.getElementById("alertPageSize").addEventListener("change", (event) => {
+    alertState.pageSize = Number(event.target.value);
+    alertState.page = 1;
+    renderAlertTable();
+  });
 
-        document.getElementById("thresholdHint").textContent = "保存成功，新的阈值已即时生效。";
-        showToast("阈值配置已保存，并已写入监控规则。");
-        pushQueue("threshold", `阈值更新：CPU ${cpu}°C / GPU ${gpu}°C / 内存 ${memory}%`);
-      });
+  document.getElementById("thresholdForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const cpu = Number(form.get("cpuThreshold"));
+    const memory = Number(form.get("memoryThreshold"));
+    const disk = Number(form.get("diskThreshold"));
+    const duration = Number(form.get("durationThreshold"));
 
-      document.getElementById("globalScan").addEventListener("click", () => {
-        showModule("health");
-        startHealthScan();
-      });
-      document.getElementById("startHealthScan").addEventListener("click", startHealthScan);
-      document.getElementById("recheckHealth").addEventListener("click", () => {
-        updateHealthProgress(0, "准备重新扫描", "0 项异常 / 0 项建议");
-        startHealthScan();
-      });
-      document.getElementById("repairSelected").addEventListener("click", () => openModal("cooling"));
-      document.getElementById("ignoreSelected").addEventListener("click", () => {
-        document.getElementById("healthIgnoredCount").textContent = "2";
-        showToast("已将选中问题标记为暂不处理。");
-      });
+    if ([cpu, memory, disk, duration].some((item) => Number.isNaN(item))) {
+      document.getElementById("thresholdHint").textContent = "请输入合法数值。";
+      return;
+    }
+    if (cpu < 50 || cpu > 95 || memory < 60 || memory > 95 || disk < 70 || disk > 95 || duration <= 0) {
+      document.getElementById("thresholdHint").textContent = "阈值超出允许范围。";
+      return;
+    }
 
-      document.getElementById("copyHardware").addEventListener("click", async () => {
-        const text = [
-          "设备：PulseDesk 研发终端 A17",
-          "CPU：Intel Core i9-14900HX",
-          "显卡：NVIDIA RTX 4080 Laptop",
-          "内存：32 GB / 5600 MT/s",
-          "系统盘：Samsung 990 Pro 2TB / 剩余 186 GB"
-        ].join("\n");
+    thresholdConfig.cpuThreshold = cpu;
+    thresholdConfig.memoryThreshold = memory;
+    thresholdConfig.diskThreshold = disk;
+    thresholdConfig.durationThreshold = duration;
+    document.getElementById("thresholdHint").textContent = "保存成功。";
+    showToast("阈值已保存。");
+  });
 
-        try {
-          await navigator.clipboard.writeText(text);
-          showToast("硬件摘要已复制到剪贴板。");
-        } catch (error) {
-          showToast("浏览器未授权剪贴板，已在页面内保留导出入口。");
-        }
-      });
+  document.getElementById("whitelistForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const processName = String(form.get("processName") || "").trim();
+    const processPath = String(form.get("processPath") || "").trim();
+    const hostType = String(form.get("hostType") || "");
+    const protectionLevel = String(form.get("protectionLevel") || "");
+    const remark = String(form.get("whiteRemark") || "").trim();
 
-      document.getElementById("startBenchmark").addEventListener("click", () => {
-        showToast("性能评测已启动，预计 3 分钟后完成。");
-        pushQueue("pressure", "整机评测进行中，正在采集 CPU / GPU / 磁盘数据。");
-      });
-      document.getElementById("openSettings").addEventListener("click", () => {
-        showModule("monitor");
-        document.getElementById("cpuThreshold").focus();
-      });
-      document.getElementById("openExport").addEventListener("click", () => openModal("export"));
-      document.getElementById("runCleanup").addEventListener("click", () => {
-        if (cleanupState.selected.size === 0) {
-          showToast("请先勾选需要清理的对象。");
-          return;
-        }
-        showToast(`清理任务已启动，预计释放 ${document.getElementById("cleanupSelectedSize").textContent}。`);
-        pushQueue("deep-clean", `清理任务已启动，预计释放 ${document.getElementById("cleanupSelectedSize").textContent}。`);
-      });
-      document.getElementById("scanDrivers").addEventListener("click", () => {
-        showToast("驱动扫描已启动，正在比对版本库。");
-      });
-      document.getElementById("installAllDrivers").addEventListener("click", () => openModal("permission"));
+    if (!processName) {
+      document.getElementById("whitelistHint").textContent = "进程名称必填。";
+      return;
+    }
+    if (!/^[A-Za-z]:\\/.test(processPath) && !/^\//.test(processPath)) {
+      document.getElementById("whitelistHint").textContent = "请输入合法绝对路径。";
+      return;
+    }
+    const duplicated = whitelistEntries.some(
+      (item) => item.processName.toLowerCase() === processName.toLowerCase() && item.path.toLowerCase() === processPath.toLowerCase()
+    );
+    if (duplicated) {
+      document.getElementById("whitelistHint").textContent = "规则已存在。";
+      return;
+    }
 
-      document.getElementById("openFloatingToggle").addEventListener("click", () => {
-        floatingVisible = !floatingVisible;
-        document.getElementById("floatingWidget").classList.toggle("hidden", !floatingVisible);
-        showToast(floatingVisible ? "悬浮监控面板已显示。" : "悬浮监控面板已隐藏。");
-      });
-      floatingWidget.addEventListener("pointerdown", (event) => {
-        if (isFloatingInline() || event.button !== 0) return;
+    whitelistEntries.unshift({
+      id: `white-${Date.now()}`,
+      processName,
+      path: processPath,
+      hostType,
+      protectionLevel,
+      remark: remark || "手工新增"
+    });
+    processes = processes.map((process) =>
+      process.name.toLowerCase() === processName.toLowerCase() ? { ...process, whitelisted: true } : process
+    );
+    document.getElementById("whitelistHint").textContent = "保存成功。";
+    renderWhitelistTable();
+    renderProcessTable();
+    event.currentTarget.reset();
+    showToast("白名单已保存。");
+  });
 
-        const rect = floatingWidget.getBoundingClientRect();
-        floatingDrag.active = true;
-        floatingDrag.offsetX = event.clientX - rect.left;
-        floatingDrag.offsetY = event.clientY - rect.top;
-        floatingWidget.classList.add("dragging");
-        floatingWidget.setPointerCapture(event.pointerId);
-        resetFloatingTilt();
-        event.preventDefault();
-      });
+  floatingWidget.addEventListener("pointerdown", (event) => {
+    if (isFloatingInline() || event.button !== 0) return;
+    const rect = floatingWidget.getBoundingClientRect();
+    floatingDrag.active = true;
+    floatingDrag.offsetX = event.clientX - rect.left;
+    floatingDrag.offsetY = event.clientY - rect.top;
+    floatingWidget.classList.add("dragging");
+    floatingWidget.setPointerCapture(event.pointerId);
+    resetFloatingTilt();
+    event.preventDefault();
+  });
 
-      floatingWidget.addEventListener("pointermove", (event) => {
-        if (floatingDrag.active) {
-          positionFloatingWidget(event.clientX - floatingDrag.offsetX, event.clientY - floatingDrag.offsetY);
-          return;
-        }
+  floatingWidget.addEventListener("pointermove", (event) => {
+    if (floatingDrag.active) {
+      positionFloatingWidget(event.clientX - floatingDrag.offsetX, event.clientY - floatingDrag.offsetY);
+    }
+  });
 
-        updateFloatingTilt(event.clientX, event.clientY);
-      });
+  function stopFloatingDrag(event) {
+    if (!floatingDrag.active) return;
+    floatingDrag.active = false;
+    floatingWidget.classList.remove("dragging");
+    if (floatingWidget.hasPointerCapture(event.pointerId)) {
+      floatingWidget.releasePointerCapture(event.pointerId);
+    }
+  }
 
-      function stopFloatingDrag(event) {
-        if (!floatingDrag.active) return;
-        floatingDrag.active = false;
-        floatingWidget.classList.remove("dragging");
-        if (floatingWidget.hasPointerCapture(event.pointerId)) {
-          floatingWidget.releasePointerCapture(event.pointerId);
-        }
-      }
+  floatingWidget.addEventListener("pointerup", stopFloatingDrag);
+  floatingWidget.addEventListener("pointercancel", stopFloatingDrag);
+  document.addEventListener("pointermove", (event) => {
+    if (floatingDrag.active || isFloatingInline()) return;
+    updateFloatingTilt(event.clientX, event.clientY);
+  });
+  document.addEventListener("mouseleave", resetFloatingTilt);
+  window.addEventListener("blur", resetFloatingTilt);
+  window.addEventListener("resize", () => syncFloatingWidgetPosition());
+}
 
-      floatingWidget.addEventListener("pointerup", stopFloatingDrag);
-      floatingWidget.addEventListener("pointercancel", stopFloatingDrag);
-      floatingWidget.addEventListener("pointerleave", () => {
-        if (!floatingDrag.active) resetFloatingTilt();
-      });
-      window.addEventListener("blur", resetFloatingTilt);
-      window.addEventListener("resize", () => syncFloatingWidgetPosition());
-
-      renderCleanupTable();
-      renderDriverTable();
-      renderQueue();
-      syncFloatingWidgetPosition(true);
-      updateFloatingDisplay(12, 67);
-      renderFloatingOrb();
-      refreshCharts();
-      window.setInterval(refreshCharts, 3000);
-    
+bindEvents();
+mutateLiveData();
+renderAll();
+syncFloatingWidgetPosition(true);
+renderFloatingOrb();
+window.setInterval(() => {
+  mutateLiveData();
+  renderAll();
+}, 4000);
