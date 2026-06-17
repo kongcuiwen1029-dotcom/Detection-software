@@ -134,6 +134,7 @@ const hostState = { page: 1, pageSize: 4, search: "", os: "all", sort: "cpu-desc
 const processState = { page: 1, pageSize: 4, search: "", risk: "all", whitelist: "all", sort: "cpu-desc" };
 const diskState = { page: 1, pageSize: 4, hostId: "all", risk: "all", sort: "days-asc" };
 const alertState = { page: 1, pageSize: 4, search: "", status: "all", risk: "all" };
+const overviewHeatRangeState = { value: "day" };
 
 let pendingAction = null;
 let liveTick = 0;
@@ -170,6 +171,8 @@ const floatingOrb = document.getElementById("floatingOrb");
 const floatingDigitBoard = document.getElementById("floatingDigitBoard");
 const floatingTempReadout = document.getElementById("floatingTempReadout");
 const overviewHeatTooltip = document.getElementById("overviewHeatTooltip");
+const overviewHeatAxis = document.getElementById("overviewHeatAxis");
+const overviewHeatRangeButtons = Array.from(document.querySelectorAll("[data-heat-range]"));
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -259,7 +262,7 @@ function syncFloatingWidgetPosition(forceReset = false) {
   }
 
   if (forceReset || !floatingDrag.initialized) {
-    positionFloatingWidget(window.innerWidth - 148, window.innerHeight - 164);
+    positionFloatingWidget(window.innerWidth - 148, 24);
     floatingDrag.initialized = true;
     return;
   }
@@ -379,6 +382,69 @@ function getHostRecommendedAction(host, displayStatus) {
   return "维持当前监控策略，并继续观察趋势变化；若指标持续抬升，可提前创建巡检任务。";
 }
 
+function getHeatCellTimeText(column, columns) {
+  const slot = Math.round((clamp(column, 0, Math.max(columns - 1, 0)) / Math.max(columns - 1, 1)) * 47);
+  const hour = Math.floor(slot / 2);
+  const minutes = slot % 2 === 0 ? "00" : "30";
+  return `${String(hour).padStart(2, "0")}:${minutes}`;
+}
+
+function getOverviewHeatColumnCount(mode) {
+  if (mode === "week") {
+    return 14;
+  }
+
+  if (mode === "month") {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  }
+
+  return 48;
+}
+
+function getOverviewHeatAxisLabels(mode) {
+  if (mode === "week") {
+    return ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+  }
+
+  if (mode === "month") {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const labelCount = Math.min(8, daysInMonth);
+    return Array.from({ length: labelCount }, (_, index) => {
+      const day = Math.round((index / Math.max(labelCount - 1, 1)) * (daysInMonth - 1)) + 1;
+      return `${day}日`;
+    });
+  }
+
+  return ["00:00", "03:30", "07:00", "10:00", "13:30", "17:00", "20:00", "23:30"];
+}
+
+function getOverviewHeatCellLabel(column, columns, mode) {
+  if (mode === "week") {
+    const labels = getOverviewHeatAxisLabels("week");
+    const normalized = clamp(column, 0, Math.max(columns - 1, 0)) / Math.max(columns, 1);
+    const index = clamp(Math.floor(normalized * labels.length), 0, labels.length - 1);
+    return labels[index];
+  }
+
+  if (mode === "month") {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = clamp(Math.floor(clamp(column, 0, Math.max(columns - 1, 0))) + 1, 1, columns);
+    return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
+  }
+
+  return getHeatCellTimeText(column, columns);
+}
+
+function renderOverviewHeatAxis(columns) {
+  if (!overviewHeatAxis) return;
+  const labels = getOverviewHeatAxisLabels(overviewHeatRangeState.value);
+  overviewHeatAxis.style.setProperty("--heat-axis-count", String(labels.length));
+  overviewHeatAxis.innerHTML = labels.map((label) => `<span>${label}</span>`).join("");
+}
+
 function positionOverviewHeatTooltip(clientX, clientY) {
   if (!overviewHeatTooltip) return;
   const wrap = overviewHeatTooltip.parentElement;
@@ -406,15 +472,20 @@ function hideOverviewHeatTooltip() {
 function showOverviewHeatTooltip(host, polygon, clientX, clientY) {
   if (!overviewHeatTooltip) return;
   const displayStatus = getHeatCellDisplayStatus(polygon.getAttribute("fill"));
+  const summaryText = `${host.ip} · ${host.os}`;
+  const timeText = polygon.dataset.timeLabel || getOverviewHeatCellLabel(0, 1, overviewHeatRangeState.value);
 
   overviewHeatTooltip.innerHTML = `
     <div class="overview-heat-tooltip-head">
-      <h4 class="overview-heat-tooltip-title">${host.name}</h4>
+      <div class="overview-heat-tooltip-meta">
+        <h4 class="overview-heat-tooltip-title">${host.name}</h4>
+        <span class="overview-heat-tooltip-time">${timeText}</span>
+      </div>
       ${formatStatusBadge(displayStatus)}
     </div>
     <div class="overview-heat-tooltip-summary">
       <span class="overview-heat-tooltip-label">摘要</span>
-      <p>${getHostHealthSummary(host, displayStatus)}</p>
+      <p>${summaryText}</p>
     </div>
     <div class="overview-heat-tooltip-metrics">
       <div class="overview-heat-tooltip-metric"><span>CPU 占比</span><strong>${host.cpu}%</strong></div>
@@ -576,11 +647,18 @@ function gaussian(nx, ny, cx, cy, spreadX, spreadY) {
 }
 
 function pickOverviewHeatColor(nx, ny, stats) {
-  const noise = pseudoNoise(nx * 80 + liveTick * 0.8, ny * 80, stats.memoryAverage * 0.02);
-  const coolPrimary = gaussian(nx, ny, 0.08, 0.82, 0.18, 0.26);
-  const coolSecondary = gaussian(nx, ny, 0.22, 0.48, 0.14, 0.28);
-  const hotPrimary = gaussian(nx, ny, 0.78, 0.18, 0.22, 0.18);
-  const hotSecondary = gaussian(nx, ny, 0.62, 0.34, 0.18, 0.2);
+  const mode = overviewHeatRangeState.value;
+  const modeNoiseShift = mode === "week" ? 1.4 : mode === "month" ? 2.2 : 0.8;
+  const coolPrimaryAnchor = mode === "week" ? [0.14, 0.76, 0.22, 0.28] : mode === "month" ? [0.24, 0.72, 0.28, 0.3] : [0.08, 0.82, 0.18, 0.26];
+  const coolSecondaryAnchor = mode === "week" ? [0.34, 0.44, 0.18, 0.3] : mode === "month" ? [0.42, 0.52, 0.22, 0.32] : [0.22, 0.48, 0.14, 0.28];
+  const hotPrimaryAnchor = mode === "week" ? [0.72, 0.22, 0.24, 0.22] : mode === "month" ? [0.66, 0.28, 0.28, 0.24] : [0.78, 0.18, 0.22, 0.18];
+  const hotSecondaryAnchor = mode === "week" ? [0.58, 0.38, 0.2, 0.24] : mode === "month" ? [0.56, 0.44, 0.26, 0.26] : [0.62, 0.34, 0.18, 0.2];
+
+  const noise = pseudoNoise(nx * 80 + liveTick * modeNoiseShift, ny * 80, stats.memoryAverage * 0.02);
+  const coolPrimary = gaussian(nx, ny, ...coolPrimaryAnchor);
+  const coolSecondary = gaussian(nx, ny, ...coolSecondaryAnchor);
+  const hotPrimary = gaussian(nx, ny, ...hotPrimaryAnchor);
+  const hotSecondary = gaussian(nx, ny, ...hotSecondaryAnchor);
   const valley = gaussian(nx, ny, 0.45, 0.14, 0.18, 0.13) + gaussian(nx, ny, 0.84, 0.72, 0.16, 0.14) * 0.3;
 
   const cool = (coolPrimary * 0.92 + coolSecondary * 0.68) * (0.64 + stats.cpuAverage / 210);
@@ -625,11 +703,13 @@ function renderOverviewHeatmap(targetId, stats) {
   const paddingY = 14;
   const usableWidth = Math.max(160, width - paddingX * 2);
   const usableHeight = Math.max(120, height - paddingY * 2);
-  const radius = clamp(Math.min(usableWidth / 64, usableHeight / 34), 7.2, 10.4);
+  const mode = overviewHeatRangeState.value;
+  const columns = getOverviewHeatColumnCount(mode);
+  const widthRadius = usableWidth / ((columns + 0.5) * Math.sqrt(3));
+  const radius = clamp(Math.min(widthRadius, usableHeight / 34), 6.4, 18);
   const hexWidth = Math.sqrt(3) * radius;
   const stepX = hexWidth;
   const stepY = radius * 1.5;
-  const columns = Math.max(14, Math.floor(usableWidth / hexWidth - 0.5));
   const rows = Math.max(10, Math.floor((usableHeight - radius * 2) / stepY) + 1);
   const gridWidth = (columns + 0.5) * hexWidth;
   const gridHeight = radius * 2 + (rows - 1) * stepY;
@@ -638,6 +718,7 @@ function renderOverviewHeatmap(targetId, stats) {
 
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  renderOverviewHeatAxis(columns);
 
   let cells = "";
   for (let row = 0; row < rows; row += 1) {
@@ -647,7 +728,8 @@ function renderOverviewHeatmap(targetId, stats) {
       const y = startY + row * stepY;
       const nx = column / (columns - 1);
       const ny = row / (rows - 1);
-      cells += `<polygon data-host-id="${host.id}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
+      const timeLabel = getOverviewHeatCellLabel(column, columns, overviewHeatRangeState.value);
+      cells += `<polygon data-host-id="${host.id}" data-time-label="${timeLabel}" points="${createHexPoints(x, y, radius)}" fill="${pickOverviewHeatColor(nx, ny, stats)}"></polygon>`;
     }
   }
 
@@ -1049,6 +1131,11 @@ function applyPendingAction() {
 }
 
 function renderAll() {
+  overviewHeatRangeButtons.forEach((button) => {
+    const active = button.dataset.heatRange === overviewHeatRangeState.value;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
   renderDiskHostOptions();
   renderOverview();
   renderHostTable();
@@ -1062,6 +1149,20 @@ function renderAll() {
 function bindEvents() {
   navButtons.forEach((button) => {
     button.addEventListener("click", () => showModule(button.dataset.moduleTarget));
+  });
+
+  overviewHeatRangeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextRange = button.dataset.heatRange;
+      if (!nextRange || nextRange === overviewHeatRangeState.value) return;
+      overviewHeatRangeState.value = nextRange;
+      renderOverview();
+      overviewHeatRangeButtons.forEach((item) => {
+        const active = item.dataset.heatRange === overviewHeatRangeState.value;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    });
   });
 
   const globalRefreshButton = document.getElementById("globalRefresh");

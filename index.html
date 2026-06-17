@@ -169,18 +169,16 @@
                   <article class="overview-heat-panel">
                     <div class="overview-heat-head">
                       <h3>主机健康态势图</h3>
-                      <button class="overview-heat-menu" type="button" aria-label="更多选项">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                          <circle cx="10" cy="4" r="1.5"></circle>
-                          <circle cx="10" cy="10" r="1.5"></circle>
-                          <circle cx="10" cy="16" r="1.5"></circle>
-                        </svg>
-                      </button>
+                      <div class="overview-heat-range" role="tablist" aria-label="主机健康态势图时间范围">
+                        <button class="overview-heat-range-button active" type="button" data-heat-range="day" aria-pressed="true">天</button>
+                        <button class="overview-heat-range-button" type="button" data-heat-range="week" aria-pressed="false">周</button>
+                        <button class="overview-heat-range-button" type="button" data-heat-range="month" aria-pressed="false">月</button>
+                      </div>
                     </div>
                     <div class="overview-heat-wrap">
                       <svg class="overview-heatmap" id="overviewHeatmap" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
                       <div class="overview-heat-tooltip" id="overviewHeatTooltip" role="tooltip" aria-hidden="true"></div>
-                      <div class="overview-heat-axis" aria-hidden="true">
+                      <div class="overview-heat-axis" id="overviewHeatAxis" aria-hidden="true">
                         <span>00:00</span>
                         <span>03:00</span>
                         <span>06:00</span>
