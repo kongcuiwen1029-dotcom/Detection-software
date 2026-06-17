@@ -990,20 +990,21 @@
       </div>
     </div>
 
-    <section class="floating-widget" id="floatingWidget">
-      <div class="floating-head">
-        <strong>悬浮监控面板</strong>
-        <button class="icon-button" id="closeFloating" aria-label="隐藏悬浮监控">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M6 6l12 12M18 6 6 18"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="floating-grid">
-        <div class="floating-box"><span class="muted">CPU</span><strong id="floatingCpu">42%</strong></div>
-        <div class="floating-box"><span class="muted">GPU</span><strong id="floatingGpu">68%</strong></div>
-        <div class="floating-box"><span class="muted">内存</span><strong id="floatingMemory">63%</strong></div>
-        <div class="floating-box"><span class="muted">温度</span><strong id="floatingTemp">67°C</strong></div>
+    <section class="floating-widget" id="floatingWidget" aria-label="悬浮监控球，剩余天数 12 天，当前核心温度 67 摄氏度">
+      <div class="floating-orb-stage" aria-hidden="true">
+        <span class="floating-orb-badge">Days Left</span>
+        <div class="floating-orb-shadow"></div>
+        <div class="floating-orb" id="floatingOrb">
+          <div class="floating-orb-core">
+            <div class="floating-display-shell">
+              <div class="floating-digit-board" id="floatingDigitBoard" data-number="12"></div>
+            </div>
+          </div>
+        </div>
+        <div class="floating-orb-status">
+          <span>实时核心温度</span>
+          <strong id="floatingTempReadout">67°C</strong>
+        </div>
       </div>
     </section>
 

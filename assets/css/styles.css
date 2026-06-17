@@ -385,7 +385,6 @@
       .hero-panel,
       .panel,
       .rail-panel,
-      .floating-widget,
       .bottom-bar,
       .drawer,
       .modal-card {
@@ -1147,39 +1146,250 @@
 
       .floating-widget {
         position: fixed;
-        right: 24px;
-        bottom: 116px;
-        width: 248px;
-        padding: 16px;
-        border-radius: 20px;
+        left: 0;
+        top: 0;
+        width: 120px;
+        height: 120px;
         z-index: 35;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+        --orb-size: 120px;
+        --display-width: 84px;
+        --display-height: 58px;
+        --cell-size: 5px;
+        --cell-gap: 2px;
+        --digit-gap: 6px;
+        --rotate-x: 0deg;
+        --rotate-y: 0deg;
+        --shadow-x: 0px;
+        --shadow-scale: 1;
+        --glow-x: 50%;
+        --glow-y: 22%;
+        --display-shift-x: 0px;
+        --display-shift-y: 0px;
       }
 
-      .floating-head {
+      .floating-widget.dragging {
+        cursor: grabbing;
+      }
+
+      .floating-orb-stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        perspective: 900px;
+        perspective-origin: 50% 50%;
+      }
+
+      .floating-orb-shadow {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        width: 86px;
+        height: 22px;
+        transform: translateX(calc(-50% + var(--shadow-x))) scaleX(var(--shadow-scale));
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(111, 108, 255, 0.34) 0%, rgba(73, 210, 255, 0.18) 44%, rgba(73, 210, 255, 0) 78%);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .floating-orb {
+        position: relative;
+        width: var(--orb-size);
+        height: var(--orb-size);
+        border-radius: 50%;
+        transform-style: preserve-3d;
+        transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y));
+        will-change: transform;
+      }
+
+      .floating-orb-core {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(255, 255, 255, 0.98) 0%, rgba(243, 240, 255, 0.96) 18%, rgba(216, 221, 255, 0.92) 38%, rgba(124, 196, 255, 0.82) 60%, rgba(112, 109, 255, 0.88) 79%, rgba(255, 79, 179, 0.92) 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          inset 0 -20px 28px rgba(71, 48, 176, 0.24),
+          0 16px 34px rgba(8, 11, 24, 0.42),
+          0 0 26px rgba(111, 60, 255, 0.24);
+      }
+
+      .floating-orb-core::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at calc(var(--glow-x) - 18%) calc(var(--glow-y) - 2%), rgba(255, 255, 255, 0.84) 0%, rgba(255, 255, 255, 0) 22%),
+          radial-gradient(circle at 50% 84%, rgba(79, 144, 255, 0.34) 0%, rgba(79, 144, 255, 0) 36%);
+        pointer-events: none;
+      }
+
+      .floating-orb-core::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 108%, rgba(255, 79, 179, 0.32) 0%, rgba(255, 79, 179, 0) 44%),
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0.18) 100%);
+        pointer-events: none;
+      }
+
+      .floating-display-shell {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--display-width);
+        height: var(--display-height);
+        padding: 12px 12px 10px;
+        transform: translate(calc(-50% + var(--display-shift-x)), calc(-47% + var(--display-shift-y)));
+        border-radius: 24px 24px 26px 26px / 20px 20px 22px 22px;
+        background:
+          radial-gradient(circle at 28% 40%, rgba(89, 155, 255, 0.82) 0%, rgba(53, 95, 176, 0.74) 24%, rgba(16, 34, 72, 0.98) 58%, rgba(7, 16, 38, 1) 100%);
+        box-shadow:
+          inset 0 0 0 1px rgba(145, 173, 255, 0.24),
+          inset 0 8px 16px rgba(170, 220, 255, 0.08),
+          inset 0 -10px 16px rgba(0, 0, 0, 0.24),
+          0 6px 16px rgba(5, 12, 28, 0.32);
+      }
+
+      .floating-display-shell::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 30%),
+          radial-gradient(circle at 24% 32%, rgba(115, 173, 242, 0.2) 0%, rgba(115, 173, 242, 0) 24%);
+        pointer-events: none;
+      }
+
+      .floating-orb-badge {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 18px;
+        padding: 0 7px;
+        color: #f8fbff;
+        background: rgba(7, 10, 24, 0.56);
+        border: 1px solid rgba(121, 150, 255, 0.22);
+        border-radius: 999px;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .floating-orb-status {
+        position: absolute;
+        left: 50%;
+        bottom: -12px;
+        transform: translateX(-50%);
+        display: grid;
+        justify-items: center;
+        gap: 2px;
+        min-width: 74px;
+        padding: 4px 6px;
+        border-radius: 12px;
+        background: rgba(7, 10, 24, 0.56);
+        border: 1px solid rgba(121, 150, 255, 0.18);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        pointer-events: none;
+      }
+
+      .floating-orb-status span {
+        color: #8a96bc;
+        font-size: 8px;
+        line-height: 1;
+      }
+
+      .floating-orb-status strong {
+        color: #f8fbff;
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .floating-orb-status strong.danger {
+        background: linear-gradient(180deg, #ffecec 0%, #ff8587 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .floating-close {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0;
+        color: #dbe6ff;
+        background: rgba(7, 10, 24, 0.5);
+        border: 1px solid rgba(121, 150, 255, 0.2);
+        border-radius: 999px;
+        z-index: 2;
+      }
+
+      .floating-digit-board {
+        position: relative;
+        z-index: 1;
+        height: 100%;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
+        justify-content: center;
+        gap: var(--digit-gap);
       }
 
-      .floating-grid {
+      .floating-digit {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(5, var(--cell-size));
+        grid-template-rows: repeat(7, var(--cell-size));
+        gap: var(--cell-gap);
       }
 
-      .floating-box {
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.72);
-        border: 1px solid rgba(199, 188, 170, 0.72);
+      .floating-pixel {
+        width: var(--cell-size);
+        height: var(--cell-size);
+        border-radius: 3px;
+        background: rgba(121, 151, 194, 0.14);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
       }
 
-      .floating-box strong {
-        display: block;
-        margin-top: 4px;
-        font-size: 20px;
+      .floating-pixel.on {
+        background: linear-gradient(180deg, #f3feff 0%, #d6f8ff 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          0 0 10px rgba(215, 252, 255, 0.56);
+      }
+
+      .floating-digit-board.danger .floating-pixel.on {
+        background: linear-gradient(180deg, #ffecec 0%, #ff8587 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.54),
+          0 0 12px rgba(255, 133, 135, 0.45);
       }
 
       .bottom-bar {
@@ -1396,7 +1606,6 @@
       .pill,
       .field,
       .search-field,
-      .floating-box,
       .bottom-chip,
       .state-box,
       .form-card,
@@ -1469,7 +1678,6 @@
       .hero-panel,
       .panel,
       .rail-panel,
-      .floating-widget,
       .bottom-bar,
       .drawer,
       .modal-card {
@@ -1566,15 +1774,21 @@
           linear-gradient(90deg, rgba(73, 210, 255, 0.03), rgba(255, 79, 179, 0.02));
       }
 
-      .bottom-chip,
-      .floating-box {
+      .bottom-chip {
         border-color: rgba(106, 127, 203, 0.2);
       }
 
       .floating-widget {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+      }
+
+      .floating-close:hover {
+        border-color: rgba(73, 210, 255, 0.26);
         box-shadow:
-          0 18px 42px rgba(0, 0, 0, 0.48),
-          0 0 24px rgba(73, 210, 255, 0.08);
+          inset 0 1px 0 rgba(255, 255, 255, 0.02),
+          0 0 18px rgba(73, 210, 255, 0.1);
       }
 
       .modal-overlay,
@@ -1631,10 +1845,6 @@
           grid-template-columns: 1fr;
         }
 
-        .floating-widget {
-          right: 18px;
-          bottom: 136px;
-        }
       }
 
       @media (max-width: 820px) {
@@ -1676,8 +1886,9 @@
 
         .floating-widget {
           position: static;
-          width: auto;
-          margin: 0 16px 16px;
+          left: auto;
+          top: auto;
+          margin: 0 auto 20px;
         }
       }
     

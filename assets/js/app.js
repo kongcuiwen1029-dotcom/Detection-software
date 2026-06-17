@@ -111,6 +111,30 @@
       let healthProgress = 0;
       let floatingVisible = true;
       let monitorSeed = 0;
+      const floatingDigitMap = {
+        0: ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+        1: ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+        2: ["01110", "10001", "00001", "00110", "01000", "10000", "11111"],
+        3: ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+        4: ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+        5: ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+        6: ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
+        7: ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+        8: ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+        9: ["01110", "10001", "10001", "01111", "00001", "00010", "11100"]
+      };
+      const floatingMotion = {
+        currentX: 0,
+        currentY: 0,
+        targetX: 0,
+        targetY: 0
+      };
+      const floatingDrag = {
+        active: false,
+        offsetX: 0,
+        offsetY: 0,
+        initialized: false
+      };
 
       const navButtons = Array.from(document.querySelectorAll(".nav-item"));
       const sections = Array.from(document.querySelectorAll(".module-section"));
@@ -122,6 +146,112 @@
       const modalConsent = document.getElementById("modalConsent");
       const detailDrawerOverlay = document.getElementById("detailDrawerOverlay");
       const toastStack = document.getElementById("toastStack");
+      const floatingWidget = document.getElementById("floatingWidget");
+      const floatingOrb = document.getElementById("floatingOrb");
+      const floatingDigitBoard = document.getElementById("floatingDigitBoard");
+      const floatingTempReadout = document.getElementById("floatingTempReadout");
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function isFloatingInline() {
+        return window.matchMedia("(max-width: 820px)").matches;
+      }
+
+      function renderFloatingDigits(value) {
+        const valueText = String(clamp(value, 0, 30)).padStart(2, "0");
+
+        floatingDigitBoard.replaceChildren(
+          ...valueText.split("").map((char) => {
+            const digit = document.createElement("div");
+            digit.className = "floating-digit";
+
+            floatingDigitMap[char].forEach((row) => {
+              row.split("").forEach((cell) => {
+                const pixel = document.createElement("span");
+                pixel.className = cell === "1" ? "floating-pixel on" : "floating-pixel";
+                digit.appendChild(pixel);
+              });
+            });
+
+            return digit;
+          })
+        );
+      }
+
+      function calculateRemainingDays(temp) {
+        return clamp(Math.round(20 - (temp - 55) * 0.8 + Math.cos(monitorSeed / 2.8) * 2), 0, 30);
+      }
+
+      function updateFloatingDisplay(daysLeft, temp) {
+        renderFloatingDigits(daysLeft);
+        floatingDigitBoard.classList.toggle("danger", daysLeft < 7);
+        floatingTempReadout.textContent = `${temp}°C`;
+        floatingTempReadout.classList.toggle("danger", temp > 65);
+        floatingWidget.setAttribute("aria-label", `悬浮监控球，剩余天数 ${daysLeft} 天，当前核心温度 ${temp} 摄氏度`);
+      }
+
+      function resetFloatingTilt() {
+        floatingMotion.targetX = 0;
+        floatingMotion.targetY = 0;
+      }
+
+      function updateFloatingTilt(clientX, clientY) {
+        const rect = floatingOrb.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const normalizedX = clamp((clientX - centerX) / (rect.width * 0.62), -1, 1);
+        const normalizedY = clamp((clientY - centerY) / (rect.height * 0.62), -1, 1);
+
+        floatingMotion.targetY = normalizedX * 14;
+        floatingMotion.targetX = -normalizedY * 14;
+      }
+
+      function renderFloatingOrb() {
+        floatingMotion.currentX += (floatingMotion.targetX - floatingMotion.currentX) * 0.18;
+        floatingMotion.currentY += (floatingMotion.targetY - floatingMotion.currentY) * 0.18;
+
+        floatingWidget.style.setProperty("--rotate-x", `${floatingMotion.currentX.toFixed(2)}deg`);
+        floatingWidget.style.setProperty("--rotate-y", `${floatingMotion.currentY.toFixed(2)}deg`);
+        floatingWidget.style.setProperty("--shadow-x", `${(-floatingMotion.currentY * 1.05).toFixed(2)}px`);
+        floatingWidget.style.setProperty("--shadow-scale", `${(1 - Math.abs(floatingMotion.currentY) * 0.01).toFixed(3)}`);
+        floatingWidget.style.setProperty("--glow-x", `${clamp(50 - floatingMotion.currentY * 0.75, 40, 60).toFixed(2)}%`);
+        floatingWidget.style.setProperty("--glow-y", `${clamp(22 + floatingMotion.currentX * 0.6, 15, 31).toFixed(2)}%`);
+        floatingWidget.style.setProperty("--display-shift-x", `${(floatingMotion.currentY * 0.65).toFixed(2)}px`);
+        floatingWidget.style.setProperty("--display-shift-y", `${(-floatingMotion.currentX * 0.5).toFixed(2)}px`);
+
+        requestAnimationFrame(renderFloatingOrb);
+      }
+
+      function positionFloatingWidget(x, y) {
+        const rect = floatingWidget.getBoundingClientRect();
+        const maxX = Math.max(16, window.innerWidth - rect.width - 16);
+        const maxY = Math.max(16, window.innerHeight - rect.height - 16);
+        floatingWidget.style.left = `${clamp(x, 16, maxX)}px`;
+        floatingWidget.style.top = `${clamp(y, 16, maxY)}px`;
+      }
+
+      function syncFloatingWidgetPosition(forceReset = false) {
+        if (isFloatingInline()) {
+          floatingWidget.style.removeProperty("left");
+          floatingWidget.style.removeProperty("top");
+          floatingDrag.initialized = false;
+          return;
+        }
+
+        if (forceReset || !floatingDrag.initialized) {
+          positionFloatingWidget(window.innerWidth - 148, window.innerHeight - 164);
+          floatingDrag.initialized = true;
+          return;
+        }
+
+        const currentLeft = Number.parseFloat(floatingWidget.style.left);
+        const currentTop = Number.parseFloat(floatingWidget.style.top);
+        if (Number.isFinite(currentLeft) && Number.isFinite(currentTop)) {
+          positionFloatingWidget(currentLeft, currentTop);
+        }
+      }
 
       function showModule(module) {
         navButtons.forEach((button) => button.classList.toggle("active", button.dataset.moduleTarget === module));
@@ -328,27 +458,25 @@
         const latestGpu = gpu[gpu.length - 1];
         const latestMemory = memory[memory.length - 1];
         const latestTemp = Math.round(64 + (latestGpu - 60) * 0.55);
+        const remainingDays = calculateRemainingDays(latestTemp);
 
-        updateRealtimeNumbers(latestCpu, latestGpu, latestMemory, latestTemp);
+        updateRealtimeNumbers(latestCpu, latestGpu, latestMemory, latestTemp, remainingDays);
       }
 
-      function updateRealtimeNumbers(cpu, gpu, memory, temp) {
+      function updateRealtimeNumbers(cpu, gpu, memory, temp, remainingDays) {
         document.getElementById("overviewCpuValue").textContent = `${cpu}%`;
         document.getElementById("cpuMetricLarge").textContent = `${cpu}%`;
         document.getElementById("bottomCpu").textContent = `${cpu}%`;
-        document.getElementById("floatingCpu").textContent = `${cpu}%`;
 
         const memoryGb = (32 - (memory / 100) * 32).toFixed(1);
         document.getElementById("overviewMemoryValue").textContent = `${memoryGb} GB`;
         document.getElementById("bottomMemory").textContent = `${memory}%`;
-        document.getElementById("floatingMemory").textContent = `${memory}%`;
 
         document.getElementById("overviewTempValue").textContent = `${temp}°C`;
         document.getElementById("tempMetricLarge").textContent = `${temp}°C`;
-        document.getElementById("floatingTemp").textContent = `${temp}°C`;
+        updateFloatingDisplay(remainingDays, temp);
 
         document.getElementById("bottomGpu").textContent = `${gpu}%`;
-        document.getElementById("floatingGpu").textContent = `${gpu}%`;
         document.getElementById("bottomDisk").textContent = `${Math.max(82, Math.min(96, Math.round(88 + Math.sin(monitorSeed / 3) * 4)))}%`;
 
         document.getElementById("sensorCpuTemp").textContent = `${temp}°C`;
@@ -670,14 +798,51 @@
         document.getElementById("floatingWidget").classList.toggle("hidden", !floatingVisible);
         showToast(floatingVisible ? "悬浮监控面板已显示。" : "悬浮监控面板已隐藏。");
       });
-      document.getElementById("closeFloating").addEventListener("click", () => {
-        floatingVisible = false;
-        document.getElementById("floatingWidget").classList.add("hidden");
+      floatingWidget.addEventListener("pointerdown", (event) => {
+        if (isFloatingInline() || event.button !== 0) return;
+
+        const rect = floatingWidget.getBoundingClientRect();
+        floatingDrag.active = true;
+        floatingDrag.offsetX = event.clientX - rect.left;
+        floatingDrag.offsetY = event.clientY - rect.top;
+        floatingWidget.classList.add("dragging");
+        floatingWidget.setPointerCapture(event.pointerId);
+        resetFloatingTilt();
+        event.preventDefault();
       });
+
+      floatingWidget.addEventListener("pointermove", (event) => {
+        if (floatingDrag.active) {
+          positionFloatingWidget(event.clientX - floatingDrag.offsetX, event.clientY - floatingDrag.offsetY);
+          return;
+        }
+
+        updateFloatingTilt(event.clientX, event.clientY);
+      });
+
+      function stopFloatingDrag(event) {
+        if (!floatingDrag.active) return;
+        floatingDrag.active = false;
+        floatingWidget.classList.remove("dragging");
+        if (floatingWidget.hasPointerCapture(event.pointerId)) {
+          floatingWidget.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      floatingWidget.addEventListener("pointerup", stopFloatingDrag);
+      floatingWidget.addEventListener("pointercancel", stopFloatingDrag);
+      floatingWidget.addEventListener("pointerleave", () => {
+        if (!floatingDrag.active) resetFloatingTilt();
+      });
+      window.addEventListener("blur", resetFloatingTilt);
+      window.addEventListener("resize", () => syncFloatingWidgetPosition());
 
       renderCleanupTable();
       renderDriverTable();
       renderQueue();
+      syncFloatingWidgetPosition(true);
+      updateFloatingDisplay(12, 67);
+      renderFloatingOrb();
       refreshCharts();
       window.setInterval(refreshCharts, 3000);
     
